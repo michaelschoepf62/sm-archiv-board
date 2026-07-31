@@ -43,6 +43,10 @@ Mandantenbezug. Die KI-Team-/Dashboard-Themen liegen weiterhin im Projekt
   **Text kopieren** je Beitrag: legt Beitragstext plus Quellenzeile (Organisation,
   Datum, Original-Link) in die Zwischenablage, Quellenzeile auch in der Detailansicht
   sichtbar; Dauerhinweis auf die Facebook-Lücke in der Filterzeile;
+  Kopfzeile bleibt beim Scrollen fixiert (sticky); Aktionsleiste je Beitrag als
+  **Icon-Reihe mit Tooltips** (📄 Details, 📋 Text kopieren, 📥 alle Fotos des
+  Beitrags über signierte Download-URLs in den Download-Ordner, ✔ übernommen,
+  🚫/👁 aus-/einblenden, 📦/♻️/🗑️/❌ Statuswechsel);
   **manueller Aktualisierungslauf** (Knopf „🔄 Aktualisieren", alle aktiven Nutzer):
   legt eine Anforderung in `sm_laeufe` an und zeigt mittig ein Fortschritts-Overlay
   (wartet/echte Prozente je Organisation/fertig); Schutzbremse: nur ein offener Lauf
