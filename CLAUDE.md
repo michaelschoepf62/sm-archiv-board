@@ -109,6 +109,9 @@ Mandantenbezug. Die KI-Team-/Dashboard-Themen liegen weiterhin im Projekt
   nach `sm_laeufe` (max. 99 %), wenn ein Lauf mit Status `laeuft` existiert
 - Läuft nur, wenn der Mac wach und Chrome mit gültigen Logins offen ist — sonst
   bleibt die Anforderung stehen (Board zeigt „Wartet auf den Arbeitsrechner")
+- Bricht der Skill sauber ab, setzt er die Zeile selbst auf `fehler` (sonst
+  meldete der Watcher fälschlich „fertig" — Lehre aus Testlauf 4, 31.07.2026);
+  der Watcher schließt nur noch Zeilen ab, die noch auf `laeuft` stehen
 
 ## Automatik (täglich 8:00)
 
@@ -163,6 +166,12 @@ auf Wunsch nachrecherchieren.]
   (verschickt über den neuen SMTP an michael.schoepf@gmail.com) anklicken und
   prüfen, dass das Board lädt
 - Ersten Automatik-Lauf prüfen: `~/.config/sm-recherche/logs/` (Folgetag nach 8:00)
+- Kopfloser Chrome-Zugriff ungeklärt: Testlauf 4 (31.07.2026, `claude -p`) bekam
+  keine Verbindung zur Claude-in-Chrome-Extension — möglicherweise, weil parallel
+  eine interaktive Claude-Session mit dem Chrome verbunden war. Klärung durch den
+  8-Uhr-Lauf bzw. einen Board-Lauf ohne offene Claude-Session; falls es dauerhaft
+  scheitert: Chrome mit Remote-Debugging-Port oder Playwright-Profil als Ausweg
+  (Vorschläge im Lauf-Log vom 31.07.2026)
 - Zustimmungs-Vorlage für die Rechteinhaber erstellen (vor erster Portal-Übernahme)
 - Facebook-Lücke: Video-/Reel-Posts ohne Foto werden nicht erfasst (Dauerhinweis
   dazu steht seit 31.07.2026 im Board)
