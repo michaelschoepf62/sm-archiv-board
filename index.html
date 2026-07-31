@@ -49,6 +49,15 @@
   #anmeldung button{width:100%;padding:10px;border:0;border-radius:8px;background:var(--blau);color:#fff;font-size:15px;cursor:pointer}
   .kopf-knoepfe{display:flex;gap:6px;align-items:center}
   .kopf-knoepfe button{border:1px solid var(--linie);background:#fff;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:12.5px}
+  /* Aktualisierungslauf */
+  #laufoverlay{position:fixed;inset:0;background:rgba(28,39,51,.45);display:flex;align-items:center;justify-content:center;z-index:20}
+  .laufbox{background:#fff;border-radius:12px;padding:24px 28px;width:min(440px,90vw);text-align:center}
+  .laufbox h2{margin:0 0 6px;color:var(--tinte)}
+  .laufbox button{border:1px solid var(--linie);background:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;margin:0 4px}
+  .balken{height:10px;background:var(--linie);border-radius:5px;overflow:hidden;margin:14px 0 8px}
+  .balken>div{height:100%;background:var(--blau);width:0%;transition:width .5s}
+  .balken.warte>div{width:30%;animation:pendel 1.2s ease-in-out infinite alternate}
+  @keyframes pendel{from{margin-left:0}to{margin-left:70%}}
 </style>
 </head>
 <body>
@@ -114,6 +123,7 @@ function zeigeBoard(){
     '<header><h1>📦 SocialMedia Archiv-Board</h1>' +
     '<span class="meta" id="zaehler"></span>' +
     '<div class="kopf-knoepfe"><span class="meta">' + esc(nutzerEmail) + '</span>' +
+    '<button id="lauf">🔄 Aktualisieren</button>' +
     '<button id="einladen">➕ Nutzer einladen</button>' +
     '<button id="abmelden">Abmelden</button></div>' +
     '<nav class="tabs"><button data-tab="aktiv" class="aktiv">Aktiv</button>' +
@@ -133,6 +143,78 @@ function zeigeBoard(){
   document.getElementById("fausgeblendet").addEventListener("change", e => { zeigeAusgeblendete = e.target.checked; zeichne(); });
   document.getElementById("abmelden").addEventListener("click", async () => { await sb.auth.signOut(); location.reload(); });
   document.getElementById("einladen").addEventListener("click", einladen);
+  document.getElementById("lauf").addEventListener("click", starteLauf);
+}
+
+// ── Aktualisierungslauf (manuell angefordert, ausgefuehrt auf Michaels Mac) ──
+let laufTimer = null;
+
+async function starteLauf(){
+  const offenQ = await sb.from("sm_laeufe").select("id")
+    .in("status", ["angefordert", "laeuft"]).order("id", { ascending: false }).limit(1);
+  if (offenQ.error) { melde("Fehler: " + offenQ.error.message); return; }
+  if (offenQ.data.length) { zeigeLauf(offenQ.data[0].id); return; }
+  const letzt = await sb.from("sm_laeufe").select("beendet_am").eq("status", "fertig")
+    .order("id", { ascending: false }).limit(1);
+  if (letzt.data && letzt.data.length && letzt.data[0].beendet_am) {
+    const rest = 60 * 60 * 1000 - (Date.now() - new Date(letzt.data[0].beendet_am).getTime());
+    if (rest > 0) { melde("Frühestens " + Math.ceil(rest / 60000) + " Minuten nach dem letzten Lauf möglich."); return; }
+  }
+  const ins = await sb.from("sm_laeufe").insert({ angefordert_von: nutzerEmail }).select("id").single();
+  if (ins.error) { melde("Fehler: " + ins.error.message); return; }
+  zeigeLauf(ins.data.id);
+}
+
+function zeigeLauf(id){
+  schliesseLauf();
+  document.body.insertAdjacentHTML("beforeend",
+    '<div id="laufoverlay"><div class="laufbox"><h2>🔄 Aktualisierungslauf</h2>' +
+    '<div class="meta" id="laufstatus">Stand wird geladen …</div>' +
+    '<div class="balken warte" id="laufbalken"><div></div></div>' +
+    '<div class="meta" id="laufprozent"></div>' +
+    '<div style="margin-top:12px"><button id="laufzu">Im Hintergrund weiter</button>' +
+    '<button id="laufabbruch">Anforderung abbrechen</button></div></div></div>');
+  document.getElementById("laufzu").addEventListener("click", schliesseLauf);
+  document.getElementById("laufabbruch").addEventListener("click", async () => {
+    const q = await sb.from("sm_laeufe").update({ status: "abgebrochen" })
+      .eq("id", id).eq("status", "angefordert");
+    if (q.error) { melde("Fehler: " + q.error.message); return; }
+    schliesseLauf(); melde("Anforderung abgebrochen.");
+  });
+  laufPoll(id);
+  laufTimer = setInterval(() => laufPoll(id), 5000);
+}
+
+function schliesseLauf(){
+  if (laufTimer) { clearInterval(laufTimer); laufTimer = null; }
+  const o = document.getElementById("laufoverlay");
+  if (o) o.remove();
+}
+
+async function laufPoll(id){
+  const q = await sb.from("sm_laeufe").select("*").eq("id", id).single();
+  if (q.error) return;
+  const l = q.data, balken = document.getElementById("laufbalken");
+  if (!balken) return;
+  const statusEl = document.getElementById("laufstatus"), proz = document.getElementById("laufprozent");
+  if (l.status === "angefordert") {
+    balken.classList.add("warte");
+    statusEl.textContent = "Wartet auf den Arbeitsrechner … (er muss wach sein, Prüfung jede Minute)";
+    proz.textContent = "angefordert von " + l.angefordert_von;
+  } else if (l.status === "laeuft") {
+    balken.classList.remove("warte");
+    balken.firstElementChild.style.width = l.fortschritt + "%";
+    statusEl.textContent = l.status_text || "Lauf gestartet …";
+    proz.textContent = l.fortschritt + " %";
+    document.getElementById("laufabbruch").style.display = "none";
+  } else if (l.status === "fertig") {
+    schliesseLauf(); melde("Aktualisierung abgeschlossen — Daten werden neu geladen.");
+    await lade();
+  } else if (l.status === "fehler") {
+    schliesseLauf(); melde("Lauf fehlgeschlagen: " + (l.status_text || "unbekannter Fehler"));
+  } else if (l.status === "abgebrochen") {
+    schliesseLauf(); melde("Anforderung wurde abgebrochen.");
+  }
 }
 
 async function einladen(){
