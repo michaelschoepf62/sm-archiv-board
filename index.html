@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SocialMedia Archiv-Board</title>
+<style>
+  :root{--tinte:#1c2733;--tinte2:#5a6b76;--linie:#e3e8ec;--blau:#0a66c2;--gruen:#1a7f37;--orange:#b25e09;--rot:#b3261e;--bg:#f4f6f8}
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--tinte);background:var(--bg)}
+  header{background:#fff;border-bottom:1px solid var(--linie);padding:14px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  h1{font-size:18px;margin:0}
+  .tabs{display:flex;gap:6px;margin-left:auto}
+  .tabs button{border:1px solid var(--linie);background:#fff;border-radius:18px;padding:6px 14px;cursor:pointer;font-size:13.5px}
+  .tabs button.aktiv{background:var(--blau);border-color:var(--blau);color:#fff}
+  .filterzeile{max-width:1060px;margin:14px auto 0;padding:0 22px;display:flex;gap:18px;align-items:center;flex-wrap:wrap;font-size:13.5px;color:var(--tinte2)}
+  .filterzeile label{display:flex;gap:6px;align-items:center;cursor:pointer}
+  main{max-width:1060px;margin:0 auto;padding:12px 22px 60px}
+  h2{font-size:15px;margin:22px 0 8px;color:var(--tinte2)}
+  .karte{background:#fff;border:1px solid var(--linie);border-radius:10px;padding:12px 16px;margin-bottom:8px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .karte.uebernommen{border-left:4px solid var(--gruen)}
+  .karte .info{flex:1;min-width:260px}
+  .titel{font-weight:600}
+  .meta{font-size:12.5px;color:var(--tinte2)}
+  .meta a{color:var(--blau);text-decoration:none}
+  .badge{font-size:11.5px;padding:2px 9px;border-radius:10px;background:var(--bg);color:var(--tinte2);white-space:nowrap}
+  .badge.erfasst{background:#e8f2ec;color:var(--gruen)}
+  .badge.in_bearbeitung{background:#fdf3e7;color:var(--orange)}
+  .badge.archiviert{background:#eef1f4;color:var(--tinte2)}
+  .badge.papierkorb{background:#faeceb;color:var(--rot)}
+  .badge.mark-uebernommen{background:#e8f2ec;color:var(--gruen)}
+  .aktionen{display:flex;gap:6px;flex-wrap:wrap}
+  .aktionen button{border:1px solid var(--linie);background:#fff;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:13px}
+  .aktionen button:hover{background:var(--bg)}
+  .aktionen button.gefahr{color:var(--rot);border-color:#eccfcd}
+  .aktionen button.an{background:#e8f2ec;border-color:#bcd8c6}
+  #status{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--tinte);color:#fff;padding:8px 18px;border-radius:20px;font-size:13.5px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:10}
+  #status.sichtbar{opacity:1}
+  .leer{color:var(--tinte2);padding:30px;text-align:center}
+  .detail{flex-basis:100%;border-top:1px solid var(--linie);margin-top:10px;padding-top:12px}
+  .detail pre{white-space:pre-wrap;font:13.5px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0 0 10px;color:var(--tinte)}
+  .detail .fotos{display:flex;gap:10px;flex-wrap:wrap}
+  .detail .fotos img{max-width:230px;max-height:170px;border-radius:8px;border:1px solid var(--linie);object-fit:cover}
+  /* Anmeldung */
+  #anmeldung{max-width:420px;margin:14vh auto;background:#fff;border:1px solid var(--linie);border-radius:12px;padding:28px;text-align:center}
+  #anmeldung h2{margin:0 0 6px;color:var(--tinte)}
+  #anmeldung p{color:var(--tinte2);font-size:13.5px}
+  #anmeldung input{width:100%;padding:10px;border:1px solid var(--linie);border-radius:8px;font-size:15px;margin:10px 0}
+  #anmeldung button{width:100%;padding:10px;border:0;border-radius:8px;background:var(--blau);color:#fff;font-size:15px;cursor:pointer}
+  .kopf-knoepfe{display:flex;gap:6px;align-items:center}
+  .kopf-knoepfe button{border:1px solid var(--linie);background:#fff;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:12.5px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/dist/umd/supabase.min.js" integrity="sha384-fPWur1rx/DE6YtXP/x0MD6dd90RgnVsz5yX/DIg7CcVAnTBZsENWuIcpvVTM39ti" crossorigin="anonymous"></script>
+<script>
+// Datenprojekt "my-bench" — Lesen und Schreiben nur fuer angemeldete Nutzer (RLS, sm_nutzer).
+const SM = { url: "https://pysdixrqptnojwqymarb.supabase.co",
+             key: "sb_publishable_ASqlpYMdXVXFcR4ljQxtRQ_bFUDIrMm" };
+const sb = window.supabase.createClient(SM.url, SM.key);
+const app = document.getElementById("app");
+let tab = "aktiv", posts = [], marken = {}, nutzerEmail = null;
+let nur30Tage = true, zeigeAusgeblendete = false;
+const offen = new Set(), fotoUrls = {};
+
+function melde(text){
+  const s = document.getElementById("status");
+  s.textContent = text; s.classList.add("sichtbar");
+  setTimeout(() => s.classList.remove("sichtbar"), 3200);
+}
+const esc = t => String(t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+// ── Anmeldung ────────────────────────────────────────────────────────────────
+function zeigeAnmeldung(hinweis){
+  app.innerHTML = '<div id="anmeldung"><h2>📦 SocialMedia Archiv-Board</h2>' +
+    '<p>' + (hinweis || "Internes Arbeitswerkzeug — bitte mit deiner E-Mail-Adresse anmelden. Du bekommst einen Anmeldelink per Mail.") + '</p>' +
+    '<input type="email" id="mail" placeholder="deine@mail.adresse" autocomplete="email">' +
+    '<button id="senden">Anmeldelink schicken</button></div>';
+  document.getElementById("senden").addEventListener("click", async () => {
+    const email = document.getElementById("mail").value.trim();
+    if (!email.includes("@")) { melde("Bitte gültige E-Mail-Adresse eingeben."); return; }
+    const { error } = await sb.auth.signInWithOtp({ email,
+      options: { emailRedirectTo: location.origin + location.pathname } });
+    melde(error ? "Fehler: " + error.message : "Anmeldelink verschickt — bitte Postfach prüfen.");
+  });
+}
+
+async function start(){
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { zeigeAnmeldung(); return; }
+  nutzerEmail = session.user.email;
+  const { data: istNutzer, error } = await sb.rpc("sm_ist_nutzer");
+  if (error || !istNutzer) {
+    zeigeAnmeldung("Die Adresse <b>" + esc(nutzerEmail) + "</b> ist (noch) nicht freigeschaltet. " +
+      "Bitte von einem bestehenden Nutzer einladen lassen. Oder mit einer anderen Adresse anmelden:");
+    await sb.auth.signOut();
+    return;
+  }
+  zeigeBoard();
+  await lade();
+}
+
+// ── Board ────────────────────────────────────────────────────────────────────
+function zeigeBoard(){
+  app.innerHTML =
+    '<header><h1>📦 SocialMedia Archiv-Board</h1>' +
+    '<span class="meta" id="zaehler"></span>' +
+    '<div class="kopf-knoepfe"><span class="meta">' + esc(nutzerEmail) + '</span>' +
+    '<button id="einladen">➕ Nutzer einladen</button>' +
+    '<button id="abmelden">Abmelden</button></div>' +
+    '<nav class="tabs"><button data-tab="aktiv" class="aktiv">Aktiv</button>' +
+    '<button data-tab="archiviert">Archiv</button>' +
+    '<button data-tab="papierkorb">Papierkorb</button></nav></header>' +
+    '<div class="filterzeile">' +
+    '<label><input type="checkbox" id="f30" checked> Nur letzte 30 Tage</label>' +
+    '<label><input type="checkbox" id="fausgeblendet"> Ausgeblendete ("nicht interessant") anzeigen</label>' +
+    '</div><main id="inhalt"><p class="leer">Lade Daten …</p></main>';
+  document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
+    tab = b.dataset.tab;
+    document.querySelectorAll(".tabs button").forEach(x => x.classList.toggle("aktiv", x === b));
+    zeichne();
+  }));
+  document.getElementById("f30").addEventListener("change", e => { nur30Tage = e.target.checked; zeichne(); });
+  document.getElementById("fausgeblendet").addEventListener("change", e => { zeigeAusgeblendete = e.target.checked; zeichne(); });
+  document.getElementById("abmelden").addEventListener("click", async () => { await sb.auth.signOut(); location.reload(); });
+  document.getElementById("einladen").addEventListener("click", einladen);
+}
+
+async function einladen(){
+  const email = (prompt("E-Mail-Adresse der einzuladenden Person:") || "").trim();
+  if (!email.includes("@")) { if (email) melde("Keine gültige Adresse."); return; }
+  const { error } = await sb.from("sm_nutzer").insert({ email, eingeladen_von: nutzerEmail });
+  if (error && !String(error.message).includes("duplicate")) { melde("Fehler: " + error.message); return; }
+  await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + location.pathname } });
+  melde(email + " freigeschaltet — Anmeldelink wurde per Mail verschickt.");
+}
+
+async function lade(){
+  const [p, m] = await Promise.all([
+    sb.from("sm_posts")
+      .select("urn,dienst,organisation,datum,titel,status,post_url,text,geloescht_am,sm_bilder(id,dateiname,sort)")
+      .order("datum", { ascending: false }),
+    sb.from("sm_markierungen").select("urn,markierung")
+  ]);
+  if (p.error) { document.getElementById("inhalt").innerHTML = '<p class="leer">Fehler beim Laden: ' + esc(p.error.message) + "</p>"; return; }
+  posts = p.data;
+  marken = {};
+  (m.data || []).forEach(r => { (marken[r.urn] = marken[r.urn] || new Set()).add(r.markierung); });
+  zeichne();
+}
+
+function zeichne(){
+  const statusFilter = { aktiv: p => p.status === "erfasst" || p.status === "in_bearbeitung",
+                         archiviert: p => p.status === "archiviert",
+                         papierkorb: p => p.status === "papierkorb" }[tab];
+  const grenze = Date.now() - 30 * 24 * 3600 * 1000;
+  let auswahl = posts.filter(statusFilter);
+  if (nur30Tage) auswahl = auswahl.filter(p => p.datum && new Date(p.datum).getTime() >= grenze);
+  const ausgeblendet = auswahl.filter(p => (marken[p.urn] || new Set()).has("nicht_interessant"));
+  if (!zeigeAusgeblendete) auswahl = auswahl.filter(p => !(marken[p.urn] || new Set()).has("nicht_interessant"));
+  const main = document.getElementById("inhalt");
+  document.getElementById("zaehler").textContent =
+    posts.length + " Posts gesamt · " + auswahl.length + " angezeigt" +
+    (!zeigeAusgeblendete && ausgeblendet.length ? " · " + ausgeblendet.length + " ausgeblendet" : "");
+  if (!auswahl.length) { main.innerHTML = '<p class="leer">Keine Einträge in dieser Ansicht.</p>'; return; }
+  const orgs = [...new Set(auswahl.map(p => p.organisation))].sort();
+  main.innerHTML = orgs.map(org =>
+    "<h2>" + esc(org) + "</h2>" + auswahl.filter(p => p.organisation === org).map(p => karte(p)).join("")
+  ).join("");
+}
+
+function karte(p){
+  const meineMarken = marken[p.urn] || new Set();
+  const datum = p.datum ? new Date(p.datum).toLocaleDateString("de-AT") : "–";
+  const dienst = { linkedin: "LinkedIn", instagram: "Instagram", facebook: "Facebook" }[p.dienst] || p.dienst;
+  const meta = datum + (p.sm_bilder.length ? " · " + p.sm_bilder.length + " Bild(er)" : "") + " · " + dienst +
+    ' · <a href="' + esc(p.post_url) + '" target="_blank">Original ↗</a>';
+  const a = [btn(p.urn, "details", p.sm_bilder.length ? "📄 Text + " + p.sm_bilder.length + " Foto(s)" : "📄 Text")];
+  a.push(btn(p.urn, "uebernommen", (meineMarken.has("uebernommen") ? "✔ Übernommen" : "Übernommen?"), false, meineMarken.has("uebernommen")));
+  a.push(btn(p.urn, "uninteressant", (meineMarken.has("nicht_interessant") ? "👁 Wieder einblenden" : "🚫 Nicht interessant")));
+  if (p.status === "erfasst" || p.status === "in_bearbeitung")
+    a.push(btn(p.urn, "archivieren", "📦 Archivieren"), btn(p.urn, "papierkorb", "🗑️ Papierkorb"));
+  if (p.status === "archiviert")
+    a.push(btn(p.urn, "reaktivieren", "♻️ Reaktivieren"), btn(p.urn, "papierkorb", "🗑️ Papierkorb"));
+  if (p.status === "papierkorb")
+    a.push(btn(p.urn, "reaktivieren", "♻️ Wiederherstellen"), btn(p.urn, "loeschen", "❌ Endgültig löschen", true));
+  const detail = offen.has(p.urn)
+    ? '<div class="detail"><pre>' + esc(p.text || "(kein Text gespeichert)") + "</pre>" +
+      (p.sm_bilder.length ? '<div class="fotos">' + p.sm_bilder.sort((x, y) => x.sort - y.sort)
+        .map(b => fotoUrls[b.dateiname]
+          ? '<a href="' + fotoUrls[b.dateiname] + '" target="_blank"><img src="' + fotoUrls[b.dateiname] + '" alt=""></a>'
+          : '<span class="meta">Lade Foto …</span>').join("") + "</div>" : "") +
+      "</div>"
+    : "";
+  return '<div class="karte' + (meineMarken.has("uebernommen") ? " uebernommen" : "") + '">' +
+    '<div class="info"><div class="titel">' + esc(p.titel || String(p.urn)) + "</div>" +
+    '<div class="meta">' + meta + "</div></div>" +
+    (meineMarken.has("uebernommen") ? '<span class="badge mark-uebernommen">übernommen</span>' : "") +
+    '<span class="badge ' + p.status + '">' + p.status.replace("_", " ") + "</span>" +
+    '<div class="aktionen">' + a.join("") + "</div>" + detail + "</div>";
+}
+const btn = (urn, ak, label, gefahr, an) =>
+  '<button class="' + (gefahr ? "gefahr" : "") + (an ? " an" : "") + "\" onclick=\"aktion('" + urn + "','" + ak + "')\">" + label + "</button>";
+
+async function aktion(urn, ak){
+  const p = posts.find(x => String(x.urn) === String(urn));
+  if (ak === "details") {
+    if (offen.has(urn)) { offen.delete(urn); zeichne(); return; }
+    offen.add(urn);
+    if (p && p.sm_bilder.length) {
+      const namen = p.sm_bilder.map(b => b.dateiname).filter(n => !fotoUrls[n]);
+      if (namen.length) {
+        const { data } = await sb.storage.from("sm-bilder").createSignedUrls(namen, 3600);
+        (data || []).forEach(e => { if (e.signedUrl) fotoUrls[e.path] = e.signedUrl; });
+      }
+    }
+    zeichne(); return;
+  }
+  if (ak === "uebernommen" || ak === "uninteressant") {
+    const markierung = ak === "uebernommen" ? "uebernommen" : "nicht_interessant";
+    const hat = (marken[urn] || new Set()).has(markierung);
+    const q = hat
+      ? await sb.from("sm_markierungen").delete().match({ email: nutzerEmail, urn, markierung })
+      : await sb.from("sm_markierungen").insert({ email: nutzerEmail, urn, markierung });
+    melde(q.error ? "Fehler: " + q.error.message :
+      (hat ? "Markierung entfernt." : (markierung === "uebernommen" ? "Als übernommen markiert." : "Ausgeblendet — über den Filter wieder sichtbar.")));
+    const [m] = [await sb.from("sm_markierungen").select("urn,markierung")];
+    marken = {};
+    (m.data || []).forEach(r => { (marken[r.urn] = marken[r.urn] || new Set()).add(r.markierung); });
+    zeichne(); return;
+  }
+  if (ak === "loeschen") {
+    if (!confirm("Diesen Eintrag ENDGÜLTIG löschen? Datensatz und Bilder werden aus Datenbank und Storage entfernt. Die lokalen Vault-Dateien bleiben bestehen.")) return;
+    if (p && p.sm_bilder.length)
+      await sb.storage.from("sm-bilder").remove(p.sm_bilder.map(b => b.dateiname));
+    const r = await sb.from("sm_posts").delete().eq("urn", urn);
+    melde(r.error ? "Fehler: " + r.error.message : "Endgültig gelöscht.");
+  } else {
+    const neu = { archivieren: { status: "archiviert", geloescht_am: null },
+                  papierkorb: { status: "papierkorb", geloescht_am: new Date().toISOString() },
+                  reaktivieren: { status: "erfasst", geloescht_am: null } }[ak];
+    const r = await sb.from("sm_posts").update(neu).eq("urn", urn);
+    melde(r.error ? "Fehler: " + r.error.message : "Gespeichert: " + neu.status);
+  }
+  await lade();
+}
+
+start();
+</script>
+</body>
+</html>
