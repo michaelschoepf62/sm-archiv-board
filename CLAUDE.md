@@ -42,7 +42,11 @@ Mandantenbezug. Die KI-Team-/Dashboard-Themen liegen weiterhin im Projekt
   **Nutzer einladen**: legt `sm_nutzer`-Eintrag an und verschickt den Anmeldelink;
   **Text kopieren** je Beitrag: legt Beitragstext plus Quellenzeile (Organisation,
   Datum, Original-Link) in die Zwischenablage, Quellenzeile auch in der Detailansicht
-  sichtbar; Dauerhinweis auf die Facebook-Lücke in der Filterzeile
+  sichtbar; Dauerhinweis auf die Facebook-Lücke in der Filterzeile;
+  **manueller Aktualisierungslauf** (Knopf „🔄 Aktualisieren", alle aktiven Nutzer):
+  legt eine Anforderung in `sm_laeufe` an und zeigt mittig ein Fortschritts-Overlay
+  (wartet/echte Prozente je Organisation/fertig); Schutzbremse: nur ein offener Lauf
+  (Unique-Index) und frühestens 60 Minuten nach dem letzten fertigen Lauf
 
 ## Datenhaltung (Supabase-Projekt "my-bench")
 
@@ -53,7 +57,10 @@ Mandantenbezug. Die KI-Team-/Dashboard-Themen liegen weiterhin im Projekt
   reaktionen, kommentare, reposts, status erfasst/in_bearbeitung/archiviert/papierkorb,
   geloescht_am, vault_pfad), `sm_bilder` (urn, dateiname, storage_url, sort),
   `sm_nutzer` (email, name, aktiv, eingeladen_von), `sm_markierungen`
-  (email, urn, markierung uebernommen|nicht_interessant)
+  (email, urn, markierung uebernommen|nicht_interessant), `sm_laeufe` (manuelle
+  Aktualisierungsläufe: angefordert_von, status angefordert|laeuft|fertig|fehler|
+  abgebrochen, fortschritt 0–100, status_text; RLS: aktive Nutzer lesen/anfordern/
+  eigene wartende abbrechen, Status fortschreiben nur die Automatik-Identität)
 - Storage-Bucket `sm-bilder`: **privat** (seit 31.07.2026), Zugriff über signierte URLs
 - **RLS-Modell (31.07.2026):** anonym ist ALLES gesperrt (vorher waren die Tabellen
   inklusive Löschen anonym offen — behobenes Sicherheitsloch). Zugriff nur für
@@ -90,6 +97,18 @@ Mandantenbezug. Die KI-Team-/Dashboard-Themen liegen weiterhin im Projekt
 - Vault-Basisordner: `/Users/michaelschopf/Library/Mobile Documents/com~apple~CloudDocs/
   COWORK-TEAM/02 Arbeitsbereich/03 Ehrenamt/Weltbund Österreich/SocialMedia/`
   (Unterordner LinkedIn/Instagram/Facebook je Organisation, `_quelle.md` je Organisation)
+
+## Manuelle Läufe vom Board (seit 31.07.2026)
+
+- launchd-Job `com.schoepf.sm-lauf-watcher` (jede Minute; RunAtLoad) →
+  `~/.config/sm-recherche/lauf-watcher.sh`: prüft `sm_laeufe` auf Anforderungen,
+  setzt Cooldown durch (60 min nach letztem fertigen Lauf → `fehler`), markiert
+  `laeuft` und startet `claude -p "/sm-recherche automatik"`; nach Skript-Ende
+  `fertig` (100 %) bzw. `fehler`. Log: `~/.config/sm-recherche/logs/JJJJ-MM-TT_laeufe.log`
+- Der Skill meldet im Automatik-Modus den Fortschritt je (Dienst, Organisation)
+  nach `sm_laeufe` (max. 99 %), wenn ein Lauf mit Status `laeuft` existiert
+- Läuft nur, wenn der Mac wach und Chrome mit gültigen Logins offen ist — sonst
+  bleibt die Anforderung stehen (Board zeigt „Wartet auf den Arbeitsrechner")
 
 ## Automatik (täglich 8:00)
 
@@ -128,7 +147,8 @@ auf Wunsch nachrecherchieren.]
   + Einladungsfunktion; RLS-Abdichtung (anonym gesperrt, Bucket privat);
   8-Uhr-Automatik; Auth-URLs gesetzt; Projekt aus KI-MITARBEITER herausgelöst;
   X (Twitter) wird nicht genutzt (Beschluss Michael); Kopierfunktion mit Quellenzeile,
-  Facebook-Hinweis und deutsche Mail-Limit-Meldung im Board ergänzt
+  Facebook-Hinweis und deutsche Mail-Limit-Meldung im Board ergänzt; manueller
+  Aktualisierungslauf vom Board (sm_laeufe + Watcher + Fortschrittsbalken)
 
 ## Stillgelegt (nichts löschen)
 
