@@ -39,7 +39,10 @@ Mandantenbezug. Die KI-Team-/Dashboard-Themen liegen weiterhin im Projekt
   Löschen entfernt DB-Zeile, Bildzeilen und Storage-Objekte, Vault-Dateien bleiben);
   **persönliche Markierungen je Nutzer**: "übernommen" (grüne Kennzeichnung) und
   "nicht interessant" (blendet für diesen Nutzer aus, über Filterhäkchen reversibel);
-  **Nutzer einladen**: legt `sm_nutzer`-Eintrag an und verschickt den Anmeldelink
+  **Nutzer einladen**: legt `sm_nutzer`-Eintrag an und verschickt den Anmeldelink;
+  **Text kopieren** je Beitrag: legt Beitragstext plus Quellenzeile (Organisation,
+  Datum, Original-Link) in die Zwischenablage, Quellenzeile auch in der Detailansicht
+  sichtbar; Dauerhinweis auf die Facebook-Lücke in der Filterzeile
 
 ## Datenhaltung (Supabase-Projekt "my-bench")
 
@@ -117,7 +120,9 @@ auf Wunsch nachrecherchieren.]
 - 26.07.2026: Register `_erfasst.md` stillgelegt (historischer Auszug, nichts löschen)
 - 31.07.2026: 30-Tage-Umfang; Web-Board mit Anmeldepflicht + persönlichen Markierungen
   + Einladungsfunktion; RLS-Abdichtung (anonym gesperrt, Bucket privat);
-  8-Uhr-Automatik; Auth-URLs gesetzt; Projekt aus KI-MITARBEITER herausgelöst
+  8-Uhr-Automatik; Auth-URLs gesetzt; Projekt aus KI-MITARBEITER herausgelöst;
+  X (Twitter) wird nicht genutzt (Beschluss Michael); Kopierfunktion mit Quellenzeile,
+  Facebook-Hinweis und deutsche Mail-Limit-Meldung im Board ergänzt
 
 ## Stillgelegt (nichts löschen)
 
@@ -129,8 +134,12 @@ auf Wunsch nachrecherchieren.]
 ## Offene Punkte (Stand 31.07.2026)
 
 - Erster Magic-Link-Login-Test durch Michael am Board (exakt eine der beiden
-  Redakteursadressen verwenden)
+  Redakteursadressen verwenden); Versuch am 31.07.2026 scheiterte am Mail-Limit
+  des eingebauten Supabase-Mailversands ("email rate limit exceeded") — nach ca.
+  einer Stunde Wartezeit erneut versuchen
+- Eigenen SMTP-Versand in der Supabase-Konsole hinterlegen und Mail-Limit erhöhen
+  (dauerhafter Fix für das Mail-Limit; Postfach-Wahl durch Michael offen)
 - Ersten Automatik-Lauf prüfen: `~/.config/sm-recherche/logs/` (Folgetag nach 8:00)
 - Zustimmungs-Vorlage für die Rechteinhaber erstellen (vor erster Portal-Übernahme)
-- Facebook-Lücke: Video-/Reel-Posts ohne Foto werden nicht erfasst
-- X (Twitter) ist als Dienst vorgesehen, aber nicht eingerichtet
+- Facebook-Lücke: Video-/Reel-Posts ohne Foto werden nicht erfasst (Dauerhinweis
+  dazu steht seit 31.07.2026 im Board)

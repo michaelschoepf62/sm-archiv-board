@@ -72,6 +72,11 @@ function melde(text){
   setTimeout(() => s.classList.remove("sichtbar"), 3200);
 }
 const esc = t => String(t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fehlerText = e => /rate limit/i.test(e.message)
+  ? "Zu viele Anmeldelinks angefordert — das Mail-Kontingent ist vorerst erschöpft. Bitte in etwa einer Stunde erneut versuchen."
+  : e.message;
+const quellenzeile = p => "Quelle: " + p.organisation + ", " +
+  (p.datum ? new Date(p.datum).toLocaleDateString("de-AT") : "Datum unbekannt") + ", " + p.post_url;
 
 // ── Anmeldung ────────────────────────────────────────────────────────────────
 function zeigeAnmeldung(hinweis){
@@ -84,7 +89,7 @@ function zeigeAnmeldung(hinweis){
     if (!email.includes("@")) { melde("Bitte gültige E-Mail-Adresse eingeben."); return; }
     const { error } = await sb.auth.signInWithOtp({ email,
       options: { emailRedirectTo: location.origin + location.pathname } });
-    melde(error ? "Fehler: " + error.message : "Anmeldelink verschickt — bitte Postfach prüfen.");
+    melde(error ? "Fehler: " + fehlerText(error) : "Anmeldelink verschickt — bitte Postfach prüfen.");
   });
 }
 
@@ -117,6 +122,7 @@ function zeigeBoard(){
     '<div class="filterzeile">' +
     '<label><input type="checkbox" id="f30" checked> Nur letzte 30 Tage</label>' +
     '<label><input type="checkbox" id="fausgeblendet"> Ausgeblendete ("nicht interessant") anzeigen</label>' +
+    '<span>Hinweis: Facebook-Videos/Reels ohne Foto werden nicht erfasst.</span>' +
     '</div><main id="inhalt"><p class="leer">Lade Daten …</p></main>';
   document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
     tab = b.dataset.tab;
@@ -134,8 +140,10 @@ async function einladen(){
   if (!email.includes("@")) { if (email) melde("Keine gültige Adresse."); return; }
   const { error } = await sb.from("sm_nutzer").insert({ email, eingeladen_von: nutzerEmail });
   if (error && !String(error.message).includes("duplicate")) { melde("Fehler: " + error.message); return; }
-  await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + location.pathname } });
-  melde(email + " freigeschaltet — Anmeldelink wurde per Mail verschickt.");
+  const otp = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + location.pathname } });
+  melde(otp.error
+    ? email + " freigeschaltet, aber der Anmeldelink konnte nicht verschickt werden: " + fehlerText(otp.error)
+    : email + " freigeschaltet — Anmeldelink wurde per Mail verschickt.");
 }
 
 async function lade(){
@@ -179,6 +187,7 @@ function karte(p){
   const meta = datum + (p.sm_bilder.length ? " · " + p.sm_bilder.length + " Bild(er)" : "") + " · " + dienst +
     ' · <a href="' + esc(p.post_url) + '" target="_blank">Original ↗</a>';
   const a = [btn(p.urn, "details", p.sm_bilder.length ? "📄 Text + " + p.sm_bilder.length + " Foto(s)" : "📄 Text")];
+  a.push(btn(p.urn, "kopieren", "📋 Text kopieren"));
   a.push(btn(p.urn, "uebernommen", (meineMarken.has("uebernommen") ? "✔ Übernommen" : "Übernommen?"), false, meineMarken.has("uebernommen")));
   a.push(btn(p.urn, "uninteressant", (meineMarken.has("nicht_interessant") ? "👁 Wieder einblenden" : "🚫 Nicht interessant")));
   if (p.status === "erfasst" || p.status === "in_bearbeitung")
@@ -189,6 +198,7 @@ function karte(p){
     a.push(btn(p.urn, "reaktivieren", "♻️ Wiederherstellen"), btn(p.urn, "loeschen", "❌ Endgültig löschen", true));
   const detail = offen.has(p.urn)
     ? '<div class="detail"><pre>' + esc(p.text || "(kein Text gespeichert)") + "</pre>" +
+      '<p class="meta">' + esc(quellenzeile(p)) + "</p>" +
       (p.sm_bilder.length ? '<div class="fotos">' + p.sm_bilder.sort((x, y) => x.sort - y.sort)
         .map(b => fotoUrls[b.dateiname]
           ? '<a href="' + fotoUrls[b.dateiname] + '" target="_blank"><img src="' + fotoUrls[b.dateiname] + '" alt=""></a>'
@@ -218,6 +228,14 @@ async function aktion(urn, ak){
       }
     }
     zeichne(); return;
+  }
+  if (ak === "kopieren") {
+    if (!p) return;
+    try {
+      await navigator.clipboard.writeText((p.text || "") + "\n\n" + quellenzeile(p));
+      melde("Text + Quellenzeile in die Zwischenablage kopiert.");
+    } catch (e) { melde("Kopieren fehlgeschlagen: " + e.message); }
+    return;
   }
   if (ak === "uebernommen" || ak === "uninteressant") {
     const markierung = ak === "uebernommen" ? "uebernommen" : "nicht_interessant";
