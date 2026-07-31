@@ -91,6 +91,57 @@ const fehlerText = e => /rate limit/i.test(e.message)
 const quellenzeile = p => "Quelle: " + p.organisation + ", " +
   (p.datum ? new Date(p.datum).toLocaleDateString("de-AT") : "Datum unbekannt") + ", " + p.post_url;
 
+// Zwischenablage mit Rueckfall auf den klassischen Kopierbefehl
+async function inZwischenablage(text){
+  try { await navigator.clipboard.writeText(text); return true; } catch (e) {}
+  const ta = document.createElement("textarea");
+  ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  let ok = false;
+  try { ok = document.execCommand("copy"); } catch (e) {}
+  ta.remove(); return ok;
+}
+
+function ladeDatei(href, name){
+  const a = document.createElement("a");
+  a.href = href; a.download = name || "";
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+// Unkomprimiertes ZIP (Store) ohne fremde Bibliotheken
+const crcTab = (() => { const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) { let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c >>> 0; } return t; })();
+const crc32 = b => { let c = 0xFFFFFFFF;
+  for (let i = 0; i < b.length; i++) c = crcTab[(c ^ b[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0; };
+
+function baueZip(dateien){ // dateien: [{name, daten: Uint8Array}]
+  const enc = new TextEncoder(), teile = [], zentral = [];
+  let offset = 0;
+  dateien.forEach(f => {
+    const name = enc.encode(f.name), crc = crc32(f.daten), n = f.daten.length;
+    const lokal = new DataView(new ArrayBuffer(30));
+    lokal.setUint32(0, 0x04034b50, true); lokal.setUint16(4, 20, true);
+    lokal.setUint32(14, crc, true); lokal.setUint32(18, n, true); lokal.setUint32(22, n, true);
+    lokal.setUint16(26, name.length, true);
+    teile.push(lokal.buffer, name, f.daten);
+    const z = new DataView(new ArrayBuffer(46));
+    z.setUint32(0, 0x02014b50, true); z.setUint16(4, 20, true); z.setUint16(6, 20, true);
+    z.setUint32(16, crc, true); z.setUint32(20, n, true); z.setUint32(24, n, true);
+    z.setUint16(28, name.length, true); z.setUint32(42, offset, true);
+    zentral.push(z.buffer, name);
+    offset += 30 + name.length + n;
+  });
+  const zLaenge = zentral.reduce((s, t) => s + t.byteLength, 0);
+  const ende = new DataView(new ArrayBuffer(22));
+  ende.setUint32(0, 0x06054b50, true);
+  ende.setUint16(8, dateien.length, true); ende.setUint16(10, dateien.length, true);
+  ende.setUint32(12, zLaenge, true); ende.setUint32(16, offset, true);
+  return new Blob([...teile, ...zentral, ende.buffer], { type: "application/zip" });
+}
+
 // ── Anmeldung (Overlay, optional — Lesen geht ohne) ──────────────────────────
 function zeigeAnmeldung(hinweis){
   if (document.getElementById("loginoverlay")) return;
@@ -373,21 +424,34 @@ async function aktion(urn, ak){
     const { data, error } = await sb.storage.from("sm-bilder").createSignedUrls(namen, 3600, { download: true });
     if (error) { melde("Fehler: " + error.message); return; }
     const urls = (data || []).filter(e => e.signedUrl);
-    urls.forEach((e, i) => setTimeout(() => {
-      const a = document.createElement("a");
-      a.href = e.signedUrl; a.download = "";
-      document.body.appendChild(a); a.click(); a.remove();
-    }, i * 500));
-    melde(urls.length + " Foto(s) werden in den Download-Ordner gespeichert" +
-      (urls.length > 1 ? " — Chrome fragt ggf. einmalig nach Erlaubnis für mehrere Downloads." : "."));
+    if (!urls.length) { melde("Keine Fotos gefunden."); return; }
+    if (urls.length === 1) {
+      ladeDatei(urls[0].signedUrl);
+      melde("Foto wird in den Download-Ordner gespeichert.");
+      return;
+    }
+    melde(urls.length + " Fotos werden als ZIP gepackt …");
+    try {
+      const dateien = [];
+      for (const e of urls) {
+        const r = await fetch(e.signedUrl);
+        if (!r.ok) throw new Error("Foto-Abruf fehlgeschlagen (" + r.status + ")");
+        dateien.push({ name: (e.path || "foto.jpg").split("/").pop(),
+                       daten: new Uint8Array(await r.arrayBuffer()) });
+      }
+      const zipName = dateien[0].name.replace(/_\d+\.[a-z]+$/i, "") + "_fotos.zip";
+      const url = URL.createObjectURL(baueZip(dateien));
+      ladeDatei(url, zipName);
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      melde(dateien.length + " Fotos als " + zipName + " in den Download-Ordner gespeichert.");
+    } catch (e) { melde("Foto-Download fehlgeschlagen: " + e.message); }
     return;
   }
   if (ak === "kopieren") {
     if (!p) return;
-    try {
-      await navigator.clipboard.writeText((p.text || "") + "\n\n" + quellenzeile(p));
-      melde("Text + Quellenzeile in die Zwischenablage kopiert.");
-    } catch (e) { melde("Kopieren fehlgeschlagen: " + e.message); }
+    const ok = await inZwischenablage((p.text || "") + "\n\n" + quellenzeile(p));
+    melde(ok ? "Text + Quellenzeile in die Zwischenablage kopiert."
+             : "Kopieren nicht möglich — bitte den Text über 📄 Details öffnen und manuell kopieren.");
     return;
   }
   if (ak === "uebernommen" || ak === "uninteressant") {
