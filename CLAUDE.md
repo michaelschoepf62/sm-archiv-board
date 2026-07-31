@@ -31,8 +31,14 @@ Mandantenbezug. Die KI-Team-/Dashboard-Themen liegen weiterhin im Projekt
   Root; Push auf main = Deployment)
 - **Repo:** `michaelschoepf62/sm-archiv-board` (public), lokal
   `/Users/michaelschopf/Documents/GitHub/sm-archiv-board/`; eine einzelne `index.html`
-- **Anmeldung:** Magic Link (supabase-js, Version gepinnt mit SRI-Hash). Ohne Anmeldung
-  nur die Login-Maske; nach Anmeldung prüft `rpc/sm_ist_nutzer` die Freischaltung
+- **Zugriffsmodell (seit 31.07.2026 abends):** LESEN ist öffentlich — ohne Anmeldung
+  Tabs Aktiv/Archiv, Details, Text kopieren, Fotos herunterladen; beim ersten Aufruf
+  Nutzungs-Disclaimer (einmalige „Verstanden"-Bestätigung via localStorage) plus
+  Dauerzeile in der Filterzeile. BEARBEITEN nur nach Anmeldung: Magic Link
+  (supabase-js, Version gepinnt mit SRI-Hash), Freischaltung via `rpc/sm_ist_nutzer`;
+  angemeldete Redakteure sehen zusätzlich Papierkorb, Markierungen, Statuswechsel,
+  Einladen und den Aktualisierungslauf. Je Organisation werden 5 Beiträge gezeigt,
+  der Rest über „mehr anzeigen" (je Tab, zuklappbar)
 - **Funktionen:** Tabs Aktiv/Archiv/Papierkorb; Standardfilter "letzte 30 Tage"
   (abschaltbar); Detailansicht mit Volltext und Fotos (signierte URLs, 1 h gültig);
   globale Statuswechsel (archivieren/Papierkorb/wiederherstellen/endgültig löschen —
@@ -66,12 +72,15 @@ Mandantenbezug. Die KI-Team-/Dashboard-Themen liegen weiterhin im Projekt
   abgebrochen, fortschritt 0–100, status_text; RLS: aktive Nutzer lesen/anfordern/
   eigene wartende abbrechen, Status fortschreiben nur die Automatik-Identität)
 - Storage-Bucket `sm-bilder`: **privat** (seit 31.07.2026), Zugriff über signierte URLs
-- **RLS-Modell (31.07.2026):** anonym ist ALLES gesperrt (vorher waren die Tabellen
-  inklusive Löschen anonym offen — behobenes Sicherheitsloch). Zugriff nur für
-  angemeldete Nutzer, die aktiv in `sm_nutzer` stehen, geprüft über die
-  security-definer-Funktion `sm_ist_nutzer()` (anon hat kein EXECUTE; Subselect auf die
-  eigene Tabelle in der Policy würde "infinite recursion" auslösen — deshalb die Funktion).
-  `sm_markierungen`: jeder nur die eigenen Zeilen
+- **RLS-Modell (31.07.2026, abends gelockert):** Anonym darf LESEN: `sm_posts` und
+  `sm_bilder` ohne Papierkorb-Einträge sowie Storage-SELECT auf `sm-bilder` (für
+  signierte URLs) — Beschluss Michael 31.07.2026 (öffentliche Lesesicht). ALLE
+  Schreibzugriffe, Papierkorb, `sm_nutzer`, `sm_markierungen`, `sm_laeufe` bleiben
+  angemeldeten aktiven Nutzern vorbehalten, geprüft über die security-definer-Funktion
+  `sm_ist_nutzer()` (Subselect auf die eigene Tabelle in der Policy würde "infinite
+  recursion" auslösen — deshalb die Funktion). `sm_markierungen`: jeder nur die
+  eigenen Zeilen. (Historie: bis 31.07. früh war anonym ALLES offen inkl. Löschen —
+  behobenes Sicherheitsloch; tagsüber alles gesperrt; abends Lesen bewusst geöffnet)
 - **Auth-Konfiguration:** Site URL und Redirect URL stehen auf der Board-URL
   (gesetzt 31.07.2026 über Michaels Chrome; Supabase-Konsole gehört zum GitHub-Konto
   michaelschoepf62, Anmeldung GitHub-OAuth + TOTP durch Michael)
@@ -87,6 +96,13 @@ Mandantenbezug. Die KI-Team-/Dashboard-Themen liegen weiterhin im Projekt
 ## Erfassung: Skill sm-recherche
 
 - Global installiert: `~/.claude/skills/sm-recherche/SKILL.md` — wirkt in jedem Projekt
+- **Dienst „Web" (seit 31.07.2026, ohne Chrome):** Webseiten der Organisationen,
+  Quellen in `SocialMedia/Web/<Organisation>/_quelle.md` (freigegeben von Michael
+  31.07.2026): Weltbund weltbund.at/thema/neuigkeiten, Weltsteirer /stories,
+  Weltkärntner /blog, BMEIA Presse/Aktuelles (ALLE Aussendungen, ohne Filter),
+  Weltniederösterreicher europa-in-niederoesterreich.at/blog, Europa-Forum Wachau
+  europaforum.at (Startseite, kein News-Bereich). urn = `web-` + normalisierte
+  Artikel-URL; dienst `web`; bei Chrome-Fehlern laufen die Web-Quellen trotzdem
 - Läuft über Michaels angemeldeten Chrome ("Claude in Chrome"): LinkedIn
   (DOM-Extraktion, Datum aus URN >> 22), Instagram (Shortcode-Dekodierung,
   og:image-Trick), Facebook (Foto-Seiten, pfbid-Permalink; Videos ohne Foto werden
@@ -139,10 +155,14 @@ Rechteinhaber — Posts enthalten oft Fotos Dritter ("Foto: Rene Strasser",
 "© Alexander Wieselthaler"), die Erklärung soll die Rechte an eingebetteten Fotos
 mit abdecken; (2) Zustimmung schriftlich dokumentieren mit Umfang, Dauer, Widerruf;
 (3) Quellen- und Urhebernennung plus Link zum Original; (4) bei erkennbaren Personen
-Bildnisschutz (§ 78 öUrhG) und DSGVO beachten. Deshalb ist das Board bewusst
-anmeldepflichtig: interne Arbeitskopie, keine öffentliche Zugänglichmachung.
-[UNVERIFIZIERT: aktuelle Judikatur im Detail — vor der ersten Portal-Veröffentlichung
-auf Wunsch nachrecherchieren.]
+Bildnisschutz (§ 78 öUrhG) und DSGVO beachten.
+**Änderung 31.07.2026 (abends):** Das Board ist auf Michaels Weisung ÖFFENTLICH
+lesbar (Beschluss trotz dokumentiertem Hinweis auf § 18a öUrhG — Anmeldepflicht war
+zuvor das Schutzargument „interne Arbeitskopie"). Grundlage laut Michael: „Die
+Zustimmung ist grundsätzlich erteilt" (Erklärung vom 31.07.2026); ein Disclaimer
+überträgt die Einhaltung der Regeln der Organisationen auf die Nutzenden.
+[ERHEBUNG ERFORDERLICH: schriftliche Dokumentation der Zustimmungen — die
+Zustimmungs-Vorlage aus den offenen Punkten bleibt dafür wichtig.]
 
 ## Entscheidungshistorie (Kurzfassung)
 
@@ -155,7 +175,10 @@ auf Wunsch nachrecherchieren.]
   8-Uhr-Automatik; Auth-URLs gesetzt; Projekt aus KI-MITARBEITER herausgelöst;
   X (Twitter) wird nicht genutzt (Beschluss Michael); Kopierfunktion mit Quellenzeile,
   Facebook-Hinweis und deutsche Mail-Limit-Meldung im Board ergänzt; manueller
-  Aktualisierungslauf vom Board (sm_laeufe + Watcher + Fortschrittsbalken)
+  Aktualisierungslauf vom Board (sm_laeufe + Watcher + Fortschrittsbalken); abends:
+  öffentliche Lesesicht mit Disclaimer (Zustimmung laut Michael grundsätzlich
+  erteilt), Icons statt Knöpfe, fixierte Kopfzeile, 5-plus-mehr je Organisation,
+  Dienst „Web" mit sechs freigegebenen Quellen
 
 ## Stillgelegt (nichts löschen)
 
@@ -176,6 +199,10 @@ auf Wunsch nachrecherchieren.]
   8-Uhr-Lauf bzw. einen Board-Lauf ohne offene Claude-Session; falls es dauerhaft
   scheitert: Chrome mit Remote-Debugging-Port oder Playwright-Profil als Ausweg
   (Vorschläge im Lauf-Log vom 31.07.2026)
-- Zustimmungs-Vorlage für die Rechteinhaber erstellen (vor erster Portal-Übernahme)
+- Zustimmungs-Vorlage für die Rechteinhaber erstellen — seit der öffentlichen
+  Lesesicht doppelt wichtig (schriftliche Dokumentation der laut Michael erteilten
+  Zustimmungen)
+- Ersten Web-Lauf prüfen (Dienst „Web", sechs Quellen — kommt mit dem nächsten
+  Automatik- oder Board-Lauf)
 - Facebook-Lücke: Video-/Reel-Posts ohne Foto werden nicht erfasst (Dauerhinweis
   dazu steht seit 31.07.2026 im Board)
