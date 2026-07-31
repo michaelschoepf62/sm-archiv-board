@@ -64,6 +64,12 @@ Mandantenbezug. Die KI-Team-/Dashboard-Themen liegen weiterhin im Projekt
 - **Auth-Konfiguration:** Site URL und Redirect URL stehen auf der Board-URL
   (gesetzt 31.07.2026 über Michaels Chrome; Supabase-Konsole gehört zum GitHub-Konto
   michaelschoepf62, Anmeldung GitHub-OAuth + TOTP durch Michael)
+- **Mail-Versand (seit 31.07.2026):** eigener SMTP über Gmail (`smtp.gmail.com:465`,
+  Benutzer `michael@schoepf-consulting.com` mit App-Passwort „Supabase sm-board";
+  setzt 2FA des Workspace-Kontos voraus, wurde dafür aktiviert). Absender ist der
+  Workspace-Alias `sm-board@schoepf-consulting.com` („SocialMedia Archiv-Board"),
+  Mail-Limit 30/h (vorher eingebauter Supabase-Versand mit nur 2/h — Ursache der
+  Fehler „email rate limit exceeded")
 - Nutzerbestand: `michael@schoepf-consulting.com`, `michael.schoepf@gmail.com`
   (Redakteure) und `sm-automatik@schoepf-consulting.com` (Automatik, s. u.)
 
@@ -133,12 +139,9 @@ auf Wunsch nachrecherchieren.]
 
 ## Offene Punkte (Stand 31.07.2026)
 
-- Erster Magic-Link-Login-Test durch Michael am Board (exakt eine der beiden
-  Redakteursadressen verwenden); Versuch am 31.07.2026 scheiterte am Mail-Limit
-  des eingebauten Supabase-Mailversands ("email rate limit exceeded") — nach ca.
-  einer Stunde Wartezeit erneut versuchen
-- Eigenen SMTP-Versand in der Supabase-Konsole hinterlegen und Mail-Limit erhöhen
-  (dauerhafter Fix für das Mail-Limit; Postfach-Wahl durch Michael offen)
+- Erster Magic-Link-Login-Test durch Michael am Board: Link vom 31.07.2026
+  (verschickt über den neuen SMTP an michael.schoepf@gmail.com) anklicken und
+  prüfen, dass das Board lädt
 - Ersten Automatik-Lauf prüfen: `~/.config/sm-recherche/logs/` (Folgetag nach 8:00)
 - Zustimmungs-Vorlage für die Rechteinhaber erstellen (vor erster Portal-Übernahme)
 - Facebook-Lücke: Video-/Reel-Posts ohne Foto werden nicht erfasst (Dauerhinweis
