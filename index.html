@@ -41,8 +41,12 @@
   .detail pre{white-space:pre-wrap;font:13.5px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0 0 10px;color:var(--tinte)}
   .detail .fotos{display:flex;gap:10px;flex-wrap:wrap}
   .detail .fotos img{max-width:230px;max-height:170px;border-radius:8px;border:1px solid var(--linie);object-fit:cover}
+  .overlay{position:fixed;inset:0;background:rgba(28,39,51,.45);z-index:20;overflow:auto}
+  button.mehr{display:block;margin:2px 0 14px;border:1px dashed var(--linie);background:#fff;border-radius:8px;padding:6px 14px;cursor:pointer;font-size:13px;color:var(--tinte2)}
+  button.mehr:hover{background:var(--bg)}
   /* Anmeldung */
   #anmeldung{max-width:420px;margin:14vh auto;background:#fff;border:1px solid var(--linie);border-radius:12px;padding:28px;text-align:center}
+  #anmeldung a{color:var(--tinte2);font-size:13px}
   #anmeldung h2{margin:0 0 6px;color:var(--tinte)}
   #anmeldung p{color:var(--tinte2);font-size:13.5px}
   #anmeldung input{width:100%;padding:10px;border:1px solid var(--linie);border-radius:8px;font-size:15px;margin:10px 0}
@@ -71,9 +75,9 @@ const SM = { url: "https://pysdixrqptnojwqymarb.supabase.co",
              key: "sb_publishable_ASqlpYMdXVXFcR4ljQxtRQ_bFUDIrMm" };
 const sb = window.supabase.createClient(SM.url, SM.key);
 const app = document.getElementById("app");
-let tab = "aktiv", posts = [], marken = {}, nutzerEmail = null;
+let tab = "aktiv", posts = [], marken = {}, nutzerEmail = null, angemeldet = false;
 let nur30Tage = true, zeigeAusgeblendete = false;
-const offen = new Set(), fotoUrls = {};
+const offen = new Set(), fotoUrls = {}, aufgeklappt = new Set();
 
 function melde(text){
   const s = document.getElementById("status");
@@ -87,12 +91,18 @@ const fehlerText = e => /rate limit/i.test(e.message)
 const quellenzeile = p => "Quelle: " + p.organisation + ", " +
   (p.datum ? new Date(p.datum).toLocaleDateString("de-AT") : "Datum unbekannt") + ", " + p.post_url;
 
-// ── Anmeldung ────────────────────────────────────────────────────────────────
+// ── Anmeldung (Overlay, optional — Lesen geht ohne) ──────────────────────────
 function zeigeAnmeldung(hinweis){
-  app.innerHTML = '<div id="anmeldung"><h2>📦 SocialMedia Archiv-Board</h2>' +
-    '<p>' + (hinweis || "Internes Arbeitswerkzeug — bitte mit deiner E-Mail-Adresse anmelden. Du bekommst einen Anmeldelink per Mail.") + '</p>' +
+  if (document.getElementById("loginoverlay")) return;
+  document.body.insertAdjacentHTML("beforeend",
+    '<div class="overlay" id="loginoverlay"><div id="anmeldung"><h2>📦 Anmeldung für Redaktion</h2>' +
+    '<p>' + (hinweis || "Zum Bearbeiten (archivieren, markieren, aktualisieren) mit deiner freigeschalteten E-Mail-Adresse anmelden. Du bekommst einen Anmeldelink per Mail.") + '</p>' +
     '<input type="email" id="mail" placeholder="deine@mail.adresse" autocomplete="email">' +
-    '<button id="senden">Anmeldelink schicken</button></div>';
+    '<button id="senden">Anmeldelink schicken</button>' +
+    '<p><a href="#" id="loginzu">Ohne Anmeldung weiterlesen</a></p></div></div>');
+  document.getElementById("loginzu").addEventListener("click", e => {
+    e.preventDefault(); document.getElementById("loginoverlay").remove();
+  });
   document.getElementById("senden").addEventListener("click", async () => {
     const email = document.getElementById("mail").value.trim();
     if (!email.includes("@")) { melde("Bitte gültige E-Mail-Adresse eingeben."); return; }
@@ -102,18 +112,40 @@ function zeigeAnmeldung(hinweis){
   });
 }
 
+// ── Disclaimer (einmalige Bestätigung je Browser) ────────────────────────────
+function zeigeDisclaimer(){
+  if (localStorage.getItem("sm_disclaimer_ok")) return;
+  document.body.insertAdjacentHTML("beforeend",
+    '<div class="overlay" id="disclaimer"><div id="anmeldung" style="max-width:520px;text-align:left">' +
+    '<h2 style="text-align:center">Hinweis zur Nutzung</h2>' +
+    '<p>Die Inhalte dieses Boards stammen aus den Social-Media-Auftritten und Webseiten ' +
+    'der Weltbund-Organisationen und des BMEIA (Außenministerium) und werden mit deren ' +
+    'Einverständnis bereitgestellt.</p>' +
+    '<p>Wer Texte oder Fotos kopiert, herunterlädt oder weiterverwendet, ist <b>eigenständig ' +
+    'dafür verantwortlich</b>, die Nutzungsregeln der jeweiligen Organisation (z. B. BMEIA, ' +
+    'Weltbund Österreich, Weltsteirer, Weltkärntner) und des Weltbund Österreich einzuhalten — ' +
+    'einschließlich Quellen- und Urheberangaben.</p>' +
+    '<button id="disclaimerok">Verstanden</button></div></div>');
+  document.getElementById("disclaimerok").addEventListener("click", () => {
+    localStorage.setItem("sm_disclaimer_ok", new Date().toISOString());
+    document.getElementById("disclaimer").remove();
+  });
+}
+
 async function start(){
   const { data: { session } } = await sb.auth.getSession();
-  if (!session) { zeigeAnmeldung(); return; }
-  nutzerEmail = session.user.email;
-  const { data: istNutzer, error } = await sb.rpc("sm_ist_nutzer");
-  if (error || !istNutzer) {
-    zeigeAnmeldung("Die Adresse <b>" + esc(nutzerEmail) + "</b> ist (noch) nicht freigeschaltet. " +
-      "Bitte von einem bestehenden Nutzer einladen lassen. Oder mit einer anderen Adresse anmelden:");
-    await sb.auth.signOut();
-    return;
+  if (session) {
+    nutzerEmail = session.user.email;
+    const { data: istNutzer } = await sb.rpc("sm_ist_nutzer");
+    if (istNutzer) { angemeldet = true; }
+    else {
+      await sb.auth.signOut();
+      const mail = nutzerEmail; nutzerEmail = null;
+      setTimeout(() => melde("Die Adresse " + mail + " ist (noch) nicht freigeschaltet — Lesezugriff ist trotzdem möglich."), 600);
+    }
   }
   zeigeBoard();
+  zeigeDisclaimer();
   await lade();
 }
 
@@ -122,16 +154,19 @@ function zeigeBoard(){
   app.innerHTML =
     '<header><h1>📦 SocialMedia Archiv-Board</h1>' +
     '<span class="meta" id="zaehler"></span>' +
-    '<div class="kopf-knoepfe"><span class="meta">' + esc(nutzerEmail) + '</span>' +
-    '<button id="lauf">🔄 Aktualisieren</button>' +
-    '<button id="einladen">➕ Nutzer einladen</button>' +
-    '<button id="abmelden">Abmelden</button></div>' +
+    '<div class="kopf-knoepfe">' + (angemeldet
+      ? '<span class="meta">' + esc(nutzerEmail) + '</span>' +
+        '<button id="lauf">🔄 Aktualisieren</button>' +
+        '<button id="einladen">➕ Nutzer einladen</button>' +
+        '<button id="abmelden">Abmelden</button>'
+      : '<button id="anmelden">🔑 Anmelden (Redaktion)</button>') + '</div>' +
     '<nav class="tabs"><button data-tab="aktiv" class="aktiv">Aktiv</button>' +
     '<button data-tab="archiviert">Archiv</button>' +
-    '<button data-tab="papierkorb">Papierkorb</button></nav></header>' +
+    (angemeldet ? '<button data-tab="papierkorb">Papierkorb</button>' : '') + '</nav></header>' +
     '<div class="filterzeile">' +
     '<label><input type="checkbox" id="f30" checked> Nur letzte 30 Tage</label>' +
-    '<label><input type="checkbox" id="fausgeblendet"> Ausgeblendete ("nicht interessant") anzeigen</label>' +
+    (angemeldet ? '<label><input type="checkbox" id="fausgeblendet"> Ausgeblendete ("nicht interessant") anzeigen</label>' : '') +
+    '<span>Nutzung nur gemäß den Regeln der jeweiligen Organisation — Verantwortung liegt bei den Nutzenden.</span>' +
     '<span>Hinweis: Facebook-Videos/Reels ohne Foto werden nicht erfasst.</span>' +
     '</div><main id="inhalt"><p class="leer">Lade Daten …</p></main>';
   document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
@@ -140,10 +175,14 @@ function zeigeBoard(){
     zeichne();
   }));
   document.getElementById("f30").addEventListener("change", e => { nur30Tage = e.target.checked; zeichne(); });
-  document.getElementById("fausgeblendet").addEventListener("change", e => { zeigeAusgeblendete = e.target.checked; zeichne(); });
-  document.getElementById("abmelden").addEventListener("click", async () => { await sb.auth.signOut(); location.reload(); });
-  document.getElementById("einladen").addEventListener("click", einladen);
-  document.getElementById("lauf").addEventListener("click", starteLauf);
+  if (angemeldet) {
+    document.getElementById("fausgeblendet").addEventListener("change", e => { zeigeAusgeblendete = e.target.checked; zeichne(); });
+    document.getElementById("abmelden").addEventListener("click", async () => { await sb.auth.signOut(); location.reload(); });
+    document.getElementById("einladen").addEventListener("click", einladen);
+    document.getElementById("lauf").addEventListener("click", starteLauf);
+  } else {
+    document.getElementById("anmelden").addEventListener("click", () => zeigeAnmeldung());
+  }
 }
 
 // ── Aktualisierungslauf (manuell angefordert, ausgefuehrt auf Michaels Mac) ──
@@ -233,7 +272,7 @@ async function lade(){
     sb.from("sm_posts")
       .select("urn,dienst,organisation,datum,titel,status,post_url,text,geloescht_am,sm_bilder(id,dateiname,sort)")
       .order("datum", { ascending: false }),
-    sb.from("sm_markierungen").select("urn,markierung")
+    angemeldet ? sb.from("sm_markierungen").select("urn,markierung") : Promise.resolve({ data: [] })
   ]);
   if (p.error) { document.getElementById("inhalt").innerHTML = '<p class="leer">Fehler beim Laden: ' + esc(p.error.message) + "</p>"; return; }
   posts = p.data;
@@ -257,29 +296,43 @@ function zeichne(){
     (!zeigeAusgeblendete && ausgeblendet.length ? " · " + ausgeblendet.length + " ausgeblendet" : "");
   if (!auswahl.length) { main.innerHTML = '<p class="leer">Keine Einträge in dieser Ansicht.</p>'; return; }
   const orgs = [...new Set(auswahl.map(p => p.organisation))].sort();
-  main.innerHTML = orgs.map(org =>
-    "<h2>" + esc(org) + "</h2>" + auswahl.filter(p => p.organisation === org).map(p => karte(p)).join("")
-  ).join("");
+  main.innerHTML = orgs.map(org => {
+    const liste = auswahl.filter(p => p.organisation === org);
+    const alle = aufgeklappt.has(tab + "|" + org);
+    const sichtbar = alle ? liste : liste.slice(0, 5);
+    let html = "<h2>" + esc(org) + "</h2>" + sichtbar.map(p => karte(p)).join("");
+    if (liste.length > 5)
+      html += '<button class="mehr" data-org="' + esc(org) + '">' +
+        (alle ? "weniger anzeigen" : "mehr anzeigen (" + (liste.length - 5) + " weitere)") + "</button>";
+    return html;
+  }).join("");
+  main.querySelectorAll("button.mehr").forEach(b => b.addEventListener("click", () => {
+    const k = tab + "|" + b.dataset.org;
+    aufgeklappt.has(k) ? aufgeklappt.delete(k) : aufgeklappt.add(k);
+    zeichne();
+  }));
 }
 
 function karte(p){
   const meineMarken = marken[p.urn] || new Set();
   const datum = p.datum ? new Date(p.datum).toLocaleDateString("de-AT") : "–";
-  const dienst = { linkedin: "LinkedIn", instagram: "Instagram", facebook: "Facebook" }[p.dienst] || p.dienst;
+  const dienst = { linkedin: "LinkedIn", instagram: "Instagram", facebook: "Facebook", web: "Webseite" }[p.dienst] || p.dienst;
   const meta = datum + (p.sm_bilder.length ? " · " + p.sm_bilder.length + " Bild(er)" : "") + " · " + dienst +
     ' · <a href="' + esc(p.post_url) + '" target="_blank">Original ↗</a>';
   const a = [btn(p.urn, "details", "📄", p.sm_bilder.length ? "Text und " + p.sm_bilder.length + " Foto(s) anzeigen" : "Text anzeigen")];
   a.push(btn(p.urn, "kopieren", "📋", "Text + Quellenzeile in die Zwischenablage kopieren"));
   if (p.sm_bilder.length)
     a.push(btn(p.urn, "fotos", "📥", p.sm_bilder.length + " Foto(s) in den Download-Ordner speichern"));
-  a.push(btn(p.urn, "uebernommen", "✔", (meineMarken.has("uebernommen") ? "Übernommen-Markierung entfernen" : "Als übernommen markieren"), false, meineMarken.has("uebernommen")));
-  a.push(btn(p.urn, "uninteressant", (meineMarken.has("nicht_interessant") ? "👁" : "🚫"), (meineMarken.has("nicht_interessant") ? "Wieder einblenden" : "Nicht interessant — für mich ausblenden")));
-  if (p.status === "erfasst" || p.status === "in_bearbeitung")
-    a.push(btn(p.urn, "archivieren", "📦", "Archivieren"), btn(p.urn, "papierkorb", "🗑️", "In den Papierkorb"));
-  if (p.status === "archiviert")
-    a.push(btn(p.urn, "reaktivieren", "♻️", "Reaktivieren"), btn(p.urn, "papierkorb", "🗑️", "In den Papierkorb"));
-  if (p.status === "papierkorb")
-    a.push(btn(p.urn, "reaktivieren", "♻️", "Wiederherstellen"), btn(p.urn, "loeschen", "❌", "Endgültig löschen", true));
+  if (angemeldet) {
+    a.push(btn(p.urn, "uebernommen", "✔", (meineMarken.has("uebernommen") ? "Übernommen-Markierung entfernen" : "Als übernommen markieren"), false, meineMarken.has("uebernommen")));
+    a.push(btn(p.urn, "uninteressant", (meineMarken.has("nicht_interessant") ? "👁" : "🚫"), (meineMarken.has("nicht_interessant") ? "Wieder einblenden" : "Nicht interessant — für mich ausblenden")));
+    if (p.status === "erfasst" || p.status === "in_bearbeitung")
+      a.push(btn(p.urn, "archivieren", "📦", "Archivieren"), btn(p.urn, "papierkorb", "🗑️", "In den Papierkorb"));
+    if (p.status === "archiviert")
+      a.push(btn(p.urn, "reaktivieren", "♻️", "Reaktivieren"), btn(p.urn, "papierkorb", "🗑️", "In den Papierkorb"));
+    if (p.status === "papierkorb")
+      a.push(btn(p.urn, "reaktivieren", "♻️", "Wiederherstellen"), btn(p.urn, "loeschen", "❌", "Endgültig löschen", true));
+  }
   const detail = offen.has(p.urn)
     ? '<div class="detail"><pre>' + esc(p.text || "(kein Text gespeichert)") + "</pre>" +
       '<p class="meta">' + esc(quellenzeile(p)) + "</p>" +
@@ -301,6 +354,7 @@ const btn = (urn, ak, icon, tipp, gefahr, an) =>
 
 async function aktion(urn, ak){
   const p = posts.find(x => String(x.urn) === String(urn));
+  if (!angemeldet && ak !== "details" && ak !== "kopieren" && ak !== "fotos") return;
   if (ak === "details") {
     if (offen.has(urn)) { offen.delete(urn); zeichne(); return; }
     offen.add(urn);
