@@ -420,13 +420,15 @@ async function lade(){
   marken = {};
   (m.data || []).forEach(r => { (marken[r.urn] = marken[r.urn] || new Set()).add(r.markierung); });
   zeichne();
-  const lauf = await sb.from("sm_laeufe").select("beendet_am,angefordert_von").eq("status", "fertig")
-    .order("id", { ascending: false }).limit(1);
+  const lauf = await sb.from("sm_laeufe").select("beendet_am,angefordert_von,status,status_text")
+    .in("status", ["fertig", "fehler"]).order("id", { ascending: false }).limit(1);
   const el = document.getElementById("letzterlauf");
-  if (el) el.textContent = (lauf.data && lauf.data.length && lauf.data[0].beendet_am)
-    ? "Letzter Lauf: " + new Date(lauf.data[0].beendet_am).toLocaleString("de-AT") +
-      " · angefordert von " + lauf.data[0].angefordert_von
-    : "Noch kein abgeschlossener Lauf.";
+  if (!el) return;
+  const l = lauf.data && lauf.data[0];
+  if (!l || !l.beendet_am) { el.textContent = "Noch kein abgeschlossener Lauf."; return; }
+  el.textContent = "Letzter Lauf: " + new Date(l.beendet_am).toLocaleString("de-AT") +
+    " · angefordert von " + l.angefordert_von + (l.status === "fehler" ? " · unvollständig" : "");
+  el.title = l.status_text || "";
 }
 
 function zeichne(){
