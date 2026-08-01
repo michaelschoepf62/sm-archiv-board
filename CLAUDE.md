@@ -30,7 +30,7 @@ Mandantenbezug. Die KI-Team-/Dashboard-Themen liegen weiterhin im Projekt
 - **Live:** https://michaelschoepf62.github.io/sm-archiv-board/ (GitHub Pages, Branch main,
   Root; Push auf main = Deployment)
 - **Repo:** `michaelschoepf62/sm-archiv-board` (public), lokal
-  `/Users/michaelschopf/Documents/GitHub/sm-archiv-board/`; eine einzelne `index.html`
+  `/Users/michaelschopf/Documents/Claude/Projects/sm-archiv-board/`; eine einzelne `index.html`
 - **Zugriffsmodell (seit 31.07.2026 abends):** LESEN ist öffentlich — ohne Anmeldung
   Tabs Aktiv/Archiv, Details, Text kopieren, Fotos herunterladen; beim ersten Aufruf
   Nutzungs-Disclaimer (einmalige „Verstanden"-Bestätigung via localStorage) plus
@@ -185,6 +185,11 @@ Zustimmungs-Vorlage aus den offenen Punkten bleibt dafür wichtig.]
   eingeführt; **alle Automatik abgeschafft** — 8-Uhr-Job, Watcher und Board-Knopf
   entfernt, Läufe nur noch interaktiv über `/sm-recherche`, der Skill trägt Lauf
   und Protokoll selbst ein
+- 01.08.2026 abends: **Erster interaktiver Lauf erfolgreich** (Lauf 6) — 12 neue
+  Beiträge (LinkedIn 8, Instagram 2, Facebook 2, Web 0). Damit ist bestätigt, dass
+  die Chrome-Dienste über `/sm-recherche` wieder liefern und der Skill Lauf und
+  Protokoll selbst einträgt. Projektordner verschoben von `Documents/GitHub/` nach
+  `Documents/Claude/Projects/sm-archiv-board` — Git-Remote davon unberührt
 
 ## Stillgelegt (nichts löschen)
 
@@ -193,16 +198,16 @@ Zustimmungs-Vorlage aus den offenen Punkten bleibt dafür wichtig.]
 - `SocialMedia/LinkedIn/_erfasst.md`: historischer Auszug Stand 19.07.2026
 - `archiv_server.py` (Port 8788): in `_Backup-2026-07-20/`
 
-## Offene Punkte (Stand 31.07.2026)
+## Offene Punkte (Stand 01.08.2026)
 
 - Erster Magic-Link-Login-Test durch Michael am Board: Link vom 31.07.2026
   (verschickt über den neuen SMTP an michael.schoepf@gmail.com) anklicken und
   prüfen, dass das Board lädt
-- **Erster interaktiver Lauf steht aus:** Seit dem Umbau am 01.08.2026 sind
-  LinkedIn/Instagram/Facebook nur über `/sm-recherche` in einer Chrome-Sitzung
-  erreichbar — der letzte erfolgreiche Social-Media-Lauf liegt beim 31.07.2026.
-  Beim ersten interaktiven Lauf prüfen, ob der Skill Lauf und Protokoll korrekt
-  einträgt (Board-Hinweis „Letzter Lauf … angefordert von …")
+- Erledigt 01.08.2026 (Lauf 6): Erster interaktiver Lauf durchgeführt — LinkedIn,
+  Instagram und Facebook liefern über `/sm-recherche` wieder, der Skill trägt Lauf
+  und Protokoll korrekt ein, der Board-Hinweis „Letzter Lauf … angefordert von …"
+  erscheint. Bestand danach 81 Beiträge (LinkedIn 45, Instagram 8, Facebook 7,
+  Web 21)
 - Web-Bestand geprüft (Lauf 5, 01.08.2026): alle sechs Quellen abgefragt, 0 neue
   Beiträge — 21 Web-Posts sind vollständig (BMEIA 9, Weltniederösterreicher 7,
   Weltkärntner 3, Weltbund 1, Weltsteirer 1, Europa-Forum Wachau 0 mangels
@@ -212,7 +217,5 @@ Zustimmungs-Vorlage aus den offenen Punkten bleibt dafür wichtig.]
 - Zustimmungs-Vorlage für die Rechteinhaber erstellen — seit der öffentlichen
   Lesesicht doppelt wichtig (schriftliche Dokumentation der laut Michael erteilten
   Zustimmungen)
-- Ersten Web-Lauf prüfen (Dienst „Web", sechs Quellen — kommt mit dem nächsten
-  Automatik- oder Board-Lauf)
 - Facebook-Lücke: Video-/Reel-Posts ohne Foto werden nicht erfasst (Dauerhinweis
   dazu steht seit 31.07.2026 im Board)
