@@ -198,12 +198,18 @@ Zustimmungs-Vorlage aus den offenen Punkten bleibt dafür wichtig.]
 - Erster Magic-Link-Login-Test durch Michael am Board: Link vom 31.07.2026
   (verschickt über den neuen SMTP an michael.schoepf@gmail.com) anklicken und
   prüfen, dass das Board lädt
-- Erster Automatik-Lauf (01.08.2026, 8:00) TEILERFOLG: Dienst Web voll funktionsfähig
-  (21 Web-Beiträge + 24 Fotos erfasst, dual in Vault und DB); die Chrome-Dienste
-  (LinkedIn/Instagram/Facebook) bekamen auch kopflos KEINE Verbindung zur
-  Claude-in-Chrome-Extension. Entscheidung Michael offen: `automatik.sh` startet
-  Chrome mit `--remote-debugging-port=9222` (plus Skill-Umstellung auf CDP) oder
-  Playwright-Profil — bis dahin erfassen Automatik/Board-Läufe nur den Dienst Web
+- **Chrome-Dienste liegen still (Hauptproblem, Stand 01.08.2026):** Kopflose Läufe
+  (`claude -p` über den Watcher) erreichen die Claude-in-Chrome-Erweiterung NICHT —
+  bestätigt in Lauf 4 (31.07.), im 8-Uhr-Lauf und in Lauf 5 (01.08., 11:00). Damit
+  erfassen Board-Läufe derzeit nur den Dienst Web; LinkedIn/Instagram/Facebook
+  bleiben ohne neue Beiträge. Entscheidung Michael offen: Chrome mit
+  `--remote-debugging-port=9222` starten und den Skill auf CDP umstellen, oder
+  Playwright-Profil mit eigenen Logins, oder Läufe nur interaktiv aus einer Session
+  mit aktiver Chrome-Anbindung starten
+- Web-Bestand geprüft (Lauf 5, 01.08.2026): alle sechs Quellen abgefragt, 0 neue
+  Beiträge — 21 Web-Posts sind vollständig (BMEIA 9, Weltniederösterreicher 7,
+  Weltkärntner 3, Weltbund 1, Weltsteirer 1, Europa-Forum Wachau 0 mangels
+  datierter Beiträge). BMEIA-Aktuelles ist JS-gerendert (curl allein reicht nicht)
 - Erledigt 01.08.2026: Weltkärntner-Galerie vom 13.07. vollständig nachgeholt
   (40 Fotos in Vault, Storage und `sm_bilder`)
 - Zustimmungs-Vorlage für die Rechteinhaber erstellen — seit der öffentlichen
