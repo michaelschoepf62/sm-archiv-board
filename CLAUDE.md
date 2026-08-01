@@ -71,8 +71,13 @@ Mandantenbezug. Die KI-Team-/Dashboard-Themen liegen weiterhin im Projekt
   `sm_nutzer` (email, name, aktiv, eingeladen_von), `sm_markierungen`
   (email, urn, markierung uebernommen|nicht_interessant), `sm_laeufe` (manuelle
   Aktualisierungsläufe: angefordert_von, status angefordert|laeuft|fertig|fehler|
-  abgebrochen, fortschritt 0–100, status_text; RLS: aktive Nutzer lesen/anfordern/
-  eigene wartende abbrechen, Status fortschreiben nur die Automatik-Identität)
+  abgebrochen, fortschritt 0–100, status_text; RLS: SELECT für alle (Letzter-Lauf-
+  Hinweis im Board), anfordern/eigene wartende abbrechen nur aktive Nutzer, Status
+  fortschreiben nur die Automatik-Identität), `sm_protokoll` (Board-Aktionen
+  angemeldeter Nutzer: lauf_angefordert|text_kopiert|fotos_geladen, nur eigene
+  Zeilen schreibbar, lesbar für alle aktiven Nutzer — Ansicht „📜 Protokoll"),
+  `sm_webquellen` (organisation, url, aktiv; Trigger begrenzt auf 10 je
+  Organisation; Pflege durch Redakteure über „🌐 Webquellen")
 - Storage-Bucket `sm-bilder`: **privat** (seit 31.07.2026), Zugriff über signierte URLs
 - **RLS-Modell (31.07.2026, abends gelockert):** Anonym darf LESEN: `sm_posts` und
   `sm_bilder` ohne Papierkorb-Einträge sowie Storage-SELECT auf `sm-bilder` (für
@@ -98,13 +103,15 @@ Mandantenbezug. Die KI-Team-/Dashboard-Themen liegen weiterhin im Projekt
 ## Erfassung: Skill sm-recherche
 
 - Global installiert: `~/.claude/skills/sm-recherche/SKILL.md` — wirkt in jedem Projekt
-- **Dienst „Web" (seit 31.07.2026, ohne Chrome):** Webseiten der Organisationen,
-  Quellen in `SocialMedia/Web/<Organisation>/_quelle.md` (freigegeben von Michael
-  31.07.2026): Weltbund weltbund.at/thema/neuigkeiten, Weltsteirer /stories,
-  Weltkärntner /blog, BMEIA Presse/Aktuelles (ALLE Aussendungen, ohne Filter),
-  Weltniederösterreicher europa-in-niederoesterreich.at/blog, Europa-Forum Wachau
-  europaforum.at (Startseite, kein News-Bereich). urn = `web-` + normalisierte
-  Artikel-URL; dienst `web`; bei Chrome-Fehlern laufen die Web-Quellen trotzdem
+- **Dienst „Web" (seit 31.07.2026, ohne Chrome):** Quellen stehen seit 01.08.2026 in
+  der Tabelle `sm_webquellen` (bis zu 10 URLs je Organisation, gepflegt von den
+  Redakteuren im Board); die `_quelle.md` unter `SocialMedia/Web/<Organisation>/`
+  liefert nur noch den Bild-Prefix. Startbestand (Freigabe Michael 31.07.2026):
+  Weltbund weltbund.at/thema/neuigkeiten, Weltsteirer /stories, Weltkärntner /blog,
+  BMEIA Presse/Aktuelles (ALLE Aussendungen, ohne Filter), Weltniederösterreicher
+  europa-in-niederoesterreich.at/blog, Europa-Forum Wachau europaforum.at
+  (Startseite, kein News-Bereich). urn = `web-` + normalisierte Artikel-URL;
+  dienst `web`; bei Chrome-Fehlern laufen die Web-Quellen trotzdem
 - Läuft über Michaels angemeldeten Chrome ("Claude in Chrome"): LinkedIn
   (DOM-Extraktion, Datum aus URN >> 22), Instagram (Shortcode-Dekodierung,
   og:image-Trick), Facebook (Foto-Seiten, pfbid-Permalink; Videos ohne Foto werden
@@ -135,19 +142,16 @@ Mandantenbezug. Die KI-Team-/Dashboard-Themen liegen weiterhin im Projekt
   meldete der Watcher fälschlich „fertig" — Lehre aus Testlauf 4, 31.07.2026);
   der Watcher schließt nur noch Zeilen ab, die noch auf `laeuft` stehen
 
-## Automatik (täglich 8:00)
+## Keine tägliche Automatik mehr (Beschluss Michael 01.08.2026)
 
-- launchd-Job `com.schoepf.sm-recherche` (`~/Library/LaunchAgents/com.schoepf.sm-recherche.plist`)
-  → `~/.config/sm-recherche/automatik.sh` → `claude -p "/sm-recherche automatik"
-  --dangerously-skip-permissions`
-- Automatik-Modus: keine Rückfragen, alle Dienste/Organisationen, 30 Tage, kein
-  Board-Öffnen, Log nach `~/.config/sm-recherche/logs/JJJJ-MM-TT.log`
-- Identität: `sm-automatik@schoepf-consulting.com` (Passwort-Login; per REST-Signup
-  angelegt, E-Mail per SQL bestätigt, in `sm_nutzer` freigeschaltet)
-- Voraussetzungen: Mac wach, Chrome offen mit gültigen LinkedIn/Instagram/Facebook-Logins
-- Risiken (Michael bekannt, 31.07.2026): unbeaufsichtigte Browser-Automation ist
-  fehleranfällig; tägliche automatisierte Abfrage verstößt formal gegen die
-  Plattform-Nutzungsbedingungen (schlimmstenfalls Kontobeschränkung)
+- Der 8-Uhr-Job `com.schoepf.sm-recherche` ist ABGESCHALTET und die Plist gelöscht;
+  `~/.config/sm-recherche/automatik.sh` bleibt als Datei liegen (unbenutzt)
+- Läufe starten AUSSCHLIESSLICH Redakteure über den Board-Knopf „🔄 Aktualisieren"
+- Der Automatik-Modus des Skills und die Identität
+  `sm-automatik@schoepf-consulting.com` (Passwort-Login, in `sm_nutzer`
+  freigeschaltet) bleiben — der Watcher nutzt beides für die manuellen Läufe
+- Voraussetzung: Mac wach; für die Chrome-Dienste zusätzlich Chrome mit gültigen
+  Logins (siehe offener Punkt kopfloser Chrome-Zugriff)
 
 ## Rechtlicher Rahmen Zweitverwertung (Einschätzung 31.07.2026, keine Rechtsberatung)
 
@@ -200,8 +204,8 @@ Zustimmungs-Vorlage aus den offenen Punkten bleibt dafür wichtig.]
   Claude-in-Chrome-Extension. Entscheidung Michael offen: `automatik.sh` startet
   Chrome mit `--remote-debugging-port=9222` (plus Skill-Umstellung auf CDP) oder
   Playwright-Profil — bis dahin erfassen Automatik/Board-Läufe nur den Dienst Web
-- Entscheidung Michael offen (aus dem Lauf-Log 01.08.2026): Weltkärntner-Galerie
-  vom 13.07. hat 39 Fotos, erfasst sind die ersten 5 — Rest nachholen?
+- Erledigt 01.08.2026: Weltkärntner-Galerie vom 13.07. vollständig nachgeholt
+  (40 Fotos in Vault, Storage und `sm_bilder`)
 - Zustimmungs-Vorlage für die Rechteinhaber erstellen — seit der öffentlichen
   Lesesicht doppelt wichtig (schriftliche Dokumentation der laut Michael erteilten
   Zustimmungen)
