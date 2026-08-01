@@ -217,7 +217,7 @@ function zeigeBoard(){
     '<label><input type="checkbox" id="f30" checked> Nur letzte 30 Tage</label>' +
     (angemeldet ? '<label><input type="checkbox" id="fausgeblendet"> Ausgeblendete ("nicht interessant") anzeigen</label>' : '') +
     '<span>Nutzung nur gemäß den Regeln der jeweiligen Organisation — Verantwortung liegt bei den Nutzenden.</span>' +
-    '<span>Hinweis: Facebook-Videos/Reels ohne Foto werden nicht erfasst.</span>' +
+    '<span>Hinweis: Bei Facebook-Videos ist das Datum aus der Altersangabe abgeleitet; reine Textbeiträge ohne Bild oder Video werden nicht erfasst.</span>' +
     '</div><main id="inhalt"><p class="leer">Lade Daten …</p></main>';
   document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
     tab = b.dataset.tab;

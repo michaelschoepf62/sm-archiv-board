@@ -112,8 +112,11 @@ Mandantenbezug. Die KI-Team-/Dashboard-Themen liegen weiterhin im Projekt
   dienst `web`; bei Chrome-Fehlern laufen die Web-Quellen trotzdem
 - Läuft über Michaels angemeldeten Chrome ("Claude in Chrome"): LinkedIn
   (DOM-Extraktion, Datum aus URN >> 22), Instagram (Shortcode-Dekodierung,
-  og:image-Trick), Facebook (Foto-Seiten, pfbid-Permalink; Videos ohne Foto werden
-  NICHT gefunden — bekannte Lücke)
+  og:image-Trick), Facebook (Foto-Seiten `/photos` mit pfbid-Permalink; seit
+  02.08.2026 zusätzlich `/videos` für Video- und Reel-Beiträge: Kachelübersicht
+  auslesen statt Einzelansicht, Datum nur relativ verfügbar und daher abgeleitet,
+  Videodateien werden nicht geladen. Nicht erfasst bleiben reine Textbeiträge
+  ohne Bild und ohne Video — verbleibende Lücke)
 - Umfang: alle Beiträge der letzten 30 Tage je Organisation (seit 31.07.2026;
   vorher letzte 5 Posts)
 - Duplikatprüfung über die Post-ID gegen `sm_posts` — nichts wird doppelt angelegt
@@ -190,6 +193,11 @@ Zustimmungs-Vorlage aus den offenen Punkten bleibt dafür wichtig.]
   die Chrome-Dienste über `/sm-recherche` wieder liefern und der Skill Lauf und
   Protokoll selbst einträgt. Projektordner verschoben von `Documents/GitHub/` nach
   `Documents/Claude/Projects/sm-archiv-board` — Git-Remote davon unberührt
+- 02.08.2026: **Zustimmungs-Vorlage** für die Rechteinhaber erstellt (Word, im
+  Vault; deckt auf Michaels Entscheidung Archiv-Board und Portal ab).
+  **Facebook-Lücke geschlossen** — der Skill liest zusätzlich den `/videos`-Reiter,
+  5 BMEIA-Videobeiträge nacherfasst; erfasst werden Vorschaubild, Text und Link,
+  keine Videodateien (Beschluss Michael). Board-Hinweis entsprechend umformuliert
 
 ## Stillgelegt (nichts löschen)
 
@@ -214,8 +222,15 @@ Zustimmungs-Vorlage aus den offenen Punkten bleibt dafür wichtig.]
   datierter Beiträge). BMEIA-Aktuelles ist JS-gerendert (curl allein reicht nicht)
 - Erledigt 01.08.2026: Weltkärntner-Galerie vom 13.07. vollständig nachgeholt
   (40 Fotos in Vault, Storage und `sm_bilder`)
-- Zustimmungs-Vorlage für die Rechteinhaber erstellen — seit der öffentlichen
-  Lesesicht doppelt wichtig (schriftliche Dokumentation der laut Michael erteilten
-  Zustimmungen)
-- Facebook-Lücke: Video-/Reel-Posts ohne Foto werden nicht erfasst (Dauerhinweis
-  dazu steht seit 31.07.2026 im Board)
+- Zustimmungs-Vorlage erstellt 02.08.2026: `Weltbund Österreich/
+  Zustimmungserklaerung-Zweitverwertung-Vorlage.docx` (Word, deckt Archiv-Board
+  UND Portal ab; Punkte: Nutzungsrechte, Fotos Dritter, Bildnisschutz,
+  Quellennennung, unbefristet mit Widerruf, unentgeltlich; Hinweisblatt auf
+  Seite 3 nicht mitversenden). OFFEN: zwei Platzhalter ausfüllen (vollständige
+  Bezeichnung des Weltbund, unterzeichnende Person mit Funktion), juristische
+  Durchsicht, Versand an die sechs Organisationen, Rückläufe dokumentieren
+- Facebook-Lücke 02.08.2026 weitgehend geschlossen: Video-/Reel-Beiträge werden
+  jetzt über `/videos` erfasst, 5 BMEIA-Beiträge nachgeholt. Rest-Lücke: reine
+  Textbeiträge ohne Bild und Video; bei Videos ist das Datum aus der relativen
+  Altersangabe abgeleitet (im Vault-Eintrag als unverifiziert vermerkt). Der
+  Board-Hinweis nennt seither beide Punkte
