@@ -194,7 +194,14 @@ Zustimmungs-Vorlage aus den offenen Punkten bleibt dafür wichtig.]
   Protokoll selbst einträgt. Projektordner verschoben von `Documents/GitHub/` nach
   `Documents/Claude/Projects/sm-archiv-board` — Git-Remote davon unberührt
 - 02.08.2026: **Zustimmungs-Vorlage** für die Rechteinhaber erstellt (Word, im
-  Vault; deckt auf Michaels Entscheidung Archiv-Board und Portal ab).
+  Vault; deckt auf Michaels Entscheidung Archiv-Board und Portal ab) — aufgesetzt
+  auf dem offiziellen WBÖ-Briefbogen. Dazu **Corporate Design erschlossen**:
+  Original in `Dropbox/_Ehrenamt/_WELTBUND/Bilder-Grafiken-Logos/_WBOE_Logo`
+  (241 MB), Arbeitsauszug im Vault unter `Weltbund Österreich/Branding/
+  Corporate-Design/` (36 Dateien, 9,4 MB, mit Manual und Word-Vorlagen);
+  verbindlich sind Blau #007AC2, Rot #E52E0E, Hellblau #ACD4F3 und die Schriften
+  Futura PT / Source Sans 3 mit Fallback Verdana / Calibri. Info dazu bei den
+  KI-Mitarbeitern Brenda, Denise und Hans hinterlegt.
   **Facebook-Lücke geschlossen** — der Skill liest zusätzlich den `/videos`-Reiter,
   5 BMEIA-Videobeiträge nacherfasst; erfasst werden Vorschaubild, Text und Link,
   keine Videodateien (Beschluss Michael). Board-Hinweis entsprechend umformuliert
@@ -223,12 +230,13 @@ Zustimmungs-Vorlage aus den offenen Punkten bleibt dafür wichtig.]
 - Erledigt 01.08.2026: Weltkärntner-Galerie vom 13.07. vollständig nachgeholt
   (40 Fotos in Vault, Storage und `sm_bilder`)
 - Zustimmungs-Vorlage erstellt 02.08.2026: `Weltbund Österreich/
-  Zustimmungserklaerung-Zweitverwertung-Vorlage.docx` (Word, deckt Archiv-Board
-  UND Portal ab; Punkte: Nutzungsrechte, Fotos Dritter, Bildnisschutz,
-  Quellennennung, unbefristet mit Widerruf, unentgeltlich; Hinweisblatt auf
-  Seite 3 nicht mitversenden). OFFEN: zwei Platzhalter ausfüllen (vollständige
-  Bezeichnung des Weltbund, unterzeichnende Person mit Funktion), juristische
-  Durchsicht, Versand an die sechs Organisationen, Rückläufe dokumentieren
+  Zustimmungserklaerung-Zweitverwertung-Vorlage.docx` (+ PDF), aufgesetzt auf
+  dem **offiziellen WBÖ-Briefbogen**; deckt Archiv-Board UND Portal ab; Punkte:
+  Nutzungsrechte, Fotos Dritter, Bildnisschutz, Quellennennung, unbefristet mit
+  Widerruf, unentgeltlich; 4 Seiten, Hinweisblatt am Ende nicht mitversenden.
+  OFFEN: Platzhalter füllen (Empfängerorganisation, Ansprechpartner mit
+  Funktion), juristische Durchsicht, Versand an die sechs Organisationen,
+  Rückläufe dokumentieren
 - Facebook-Lücke 02.08.2026 weitgehend geschlossen: Video-/Reel-Beiträge werden
   jetzt über `/videos` erfasst, 5 BMEIA-Beiträge nachgeholt. Rest-Lücke: reine
   Textbeiträge ohne Bild und Video; bei Videos ist das Datum aus der relativen
