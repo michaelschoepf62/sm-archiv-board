@@ -55,10 +55,8 @@ Mandantenbezug. Die KI-Team-/Dashboard-Themen liegen weiterhin im Projekt
   eine ZIP-Datei (eigener ZIP-Packer im Board, da Chrome zeitversetzte
   Mehrfach-Downloads blockiert — Fix 01.08.2026), ✔ übernommen,
   🚫/👁 aus-/einblenden, 📦/♻️/🗑️/❌ Statuswechsel);
-  **manueller Aktualisierungslauf** (Knopf „🔄 Aktualisieren", alle aktiven Nutzer):
-  legt eine Anforderung in `sm_laeufe` an und zeigt mittig ein Fortschritts-Overlay
-  (wartet/echte Prozente je Organisation/fertig); Schutzbremse: nur ein offener Lauf
-  (Unique-Index) und frühestens 60 Minuten nach dem letzten fertigen Lauf
+  im Kopf der Hinweis auf den letzten Lauf (Zeitpunkt, Redakteur, ggf.
+  „unvollständig"); für Redakteure zusätzlich „🌐 Webquellen" und „📜 Protokoll"
 
 ## Datenhaltung (Supabase-Projekt "my-bench")
 
@@ -127,31 +125,27 @@ Mandantenbezug. Die KI-Team-/Dashboard-Themen liegen weiterhin im Projekt
   COWORK-TEAM/02 Arbeitsbereich/03 Ehrenamt/Weltbund Österreich/SocialMedia/`
   (Unterordner LinkedIn/Instagram/Facebook je Organisation, `_quelle.md` je Organisation)
 
-## Manuelle Läufe vom Board (seit 31.07.2026)
+## Läufe nur interaktiv (Beschluss Michael 01.08.2026, endgültig)
 
-- launchd-Job `com.schoepf.sm-lauf-watcher` (jede Minute; RunAtLoad) →
-  `~/.config/sm-recherche/lauf-watcher.sh`: prüft `sm_laeufe` auf Anforderungen,
-  setzt Cooldown durch (60 min nach letztem fertigen Lauf → `fehler`), markiert
-  `laeuft` und startet `claude -p "/sm-recherche automatik"`; nach Skript-Ende
-  `fertig` (100 %) bzw. `fehler`. Log: `~/.config/sm-recherche/logs/JJJJ-MM-TT_laeufe.log`
-- Der Skill meldet im Automatik-Modus den Fortschritt je (Dienst, Organisation)
-  nach `sm_laeufe` (max. 99 %), wenn ein Lauf mit Status `laeuft` existiert
-- Läuft nur, wenn der Mac wach und Chrome mit gültigen Logins offen ist — sonst
-  bleibt die Anforderung stehen (Board zeigt „Wartet auf den Arbeitsrechner")
-- Bricht der Skill sauber ab, setzt er die Zeile selbst auf `fehler` (sonst
-  meldete der Watcher fälschlich „fertig" — Lehre aus Testlauf 4, 31.07.2026);
-  der Watcher schließt nur noch Zeilen ab, die noch auf `laeuft` stehen
-
-## Keine tägliche Automatik mehr (Beschluss Michael 01.08.2026)
-
-- Der 8-Uhr-Job `com.schoepf.sm-recherche` ist ABGESCHALTET und die Plist gelöscht;
-  `~/.config/sm-recherche/automatik.sh` bleibt als Datei liegen (unbenutzt)
-- Läufe starten AUSSCHLIESSLICH Redakteure über den Board-Knopf „🔄 Aktualisieren"
-- Der Automatik-Modus des Skills und die Identität
+- **So startet Michael einen Lauf:** in einer Claude-Sitzung mit angebundenem Chrome
+  `/sm-recherche` eingeben (oder Trigger KIRECHERCHE). Kein Board-Knopf, keine
+  Automatik, kein Hintergrundjob.
+- **Abgeschafft und gelöscht:** launchd-Jobs `com.schoepf.sm-recherche` (8 Uhr) und
+  `com.schoepf.sm-lauf-watcher` (Minutentakt) samt Plists und den Skripten
+  `automatik.sh` und `lauf-watcher.sh`; im Board der Knopf „🔄 Aktualisieren" mit
+  Fortschritts-Overlay. Grund: Kopflose Läufe erreichen die Claude-in-Chrome-
+  Erweiterung nicht (dreimal bestätigt 31.07./01.08.2026) — LinkedIn, Instagram und
+  Facebook blieben dadurch leer.
+- **Geblieben:** Tabelle `sm_laeufe` als Nachweis. Der Skill trägt jetzt SELBST jeden
+  Lauf ein (Start → Fortschritt je Organisation → Endstatus) und schreibt einen
+  Protokolleintrag; das Board zeigt daraus den Hinweis „Letzter Lauf: … · angefordert
+  von …" (öffentlich sichtbar, bei Teilabbruch mit Zusatz „unvollständig").
+  Dafür dürfen seit 01.08.2026 die Automatik-Identität
   `sm-automatik@schoepf-consulting.com` (Passwort-Login, in `sm_nutzer`
-  freigeschaltet) bleiben — der Watcher nutzt beides für die manuellen Läufe
-- Voraussetzung: Mac wach; für die Chrome-Dienste zusätzlich Chrome mit gültigen
-  Logins (siehe offener Punkt kopfloser Chrome-Zugriff)
+  freigeschaltet) Zeilen im Namen eines Redakteurs anlegen.
+- Voraussetzung für die Chrome-Dienste: Chrome offen, in LinkedIn/Instagram/Facebook
+  angemeldet, Claude-in-Chrome mit der Sitzung verbunden. Der Dienst Web läuft
+  unabhängig davon.
 
 ## Rechtlicher Rahmen Zweitverwertung (Einschätzung 31.07.2026, keine Rechtsberatung)
 
@@ -185,6 +179,12 @@ Zustimmungs-Vorlage aus den offenen Punkten bleibt dafür wichtig.]
   öffentliche Lesesicht mit Disclaimer (Zustimmung laut Michael grundsätzlich
   erteilt), Icons statt Knöpfe, fixierte Kopfzeile, 5-plus-mehr je Organisation,
   Dienst „Web" mit sechs freigegebenen Quellen
+- 01.08.2026: Fix Mehrfach-Foto-Download (ZIP) und Zwischenablage-Rückfall;
+  Weltkärntner-Galerie vollständig nachgeholt (40 Fotos); Protokoll (`sm_protokoll`
+  + Ansicht) und Webquellen-Verwaltung (`sm_webquellen`, max. 10 je Organisation)
+  eingeführt; **alle Automatik abgeschafft** — 8-Uhr-Job, Watcher und Board-Knopf
+  entfernt, Läufe nur noch interaktiv über `/sm-recherche`, der Skill trägt Lauf
+  und Protokoll selbst ein
 
 ## Stillgelegt (nichts löschen)
 
@@ -198,14 +198,11 @@ Zustimmungs-Vorlage aus den offenen Punkten bleibt dafür wichtig.]
 - Erster Magic-Link-Login-Test durch Michael am Board: Link vom 31.07.2026
   (verschickt über den neuen SMTP an michael.schoepf@gmail.com) anklicken und
   prüfen, dass das Board lädt
-- **Chrome-Dienste liegen still (Hauptproblem, Stand 01.08.2026):** Kopflose Läufe
-  (`claude -p` über den Watcher) erreichen die Claude-in-Chrome-Erweiterung NICHT —
-  bestätigt in Lauf 4 (31.07.), im 8-Uhr-Lauf und in Lauf 5 (01.08., 11:00). Damit
-  erfassen Board-Läufe derzeit nur den Dienst Web; LinkedIn/Instagram/Facebook
-  bleiben ohne neue Beiträge. Entscheidung Michael offen: Chrome mit
-  `--remote-debugging-port=9222` starten und den Skill auf CDP umstellen, oder
-  Playwright-Profil mit eigenen Logins, oder Läufe nur interaktiv aus einer Session
-  mit aktiver Chrome-Anbindung starten
+- **Erster interaktiver Lauf steht aus:** Seit dem Umbau am 01.08.2026 sind
+  LinkedIn/Instagram/Facebook nur über `/sm-recherche` in einer Chrome-Sitzung
+  erreichbar — der letzte erfolgreiche Social-Media-Lauf liegt beim 31.07.2026.
+  Beim ersten interaktiven Lauf prüfen, ob der Skill Lauf und Protokoll korrekt
+  einträgt (Board-Hinweis „Letzter Lauf … angefordert von …")
 - Web-Bestand geprüft (Lauf 5, 01.08.2026): alle sechs Quellen abgefragt, 0 neue
   Beiträge — 21 Web-Posts sind vollständig (BMEIA 9, Weltniederösterreicher 7,
   Weltkärntner 3, Weltbund 1, Weltsteirer 1, Europa-Forum Wachau 0 mangels
