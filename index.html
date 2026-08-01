@@ -211,9 +211,12 @@ function zeigeBoard(){
   app.innerHTML =
     '<header><h1>📦 SocialMedia Archiv-Board</h1>' +
     '<span class="meta" id="zaehler"></span>' +
+    '<span class="meta" id="letzterlauf"></span>' +
     '<div class="kopf-knoepfe">' + (angemeldet
       ? '<span class="meta">' + esc(nutzerEmail) + '</span>' +
         '<button id="lauf">🔄 Aktualisieren</button>' +
+        '<button id="webquellen">🌐 Webquellen</button>' +
+        '<button id="protokoll">📜 Protokoll</button>' +
         '<button id="einladen">➕ Nutzer einladen</button>' +
         '<button id="abmelden">Abmelden</button>'
       : '<button id="anmelden">🔑 Anmelden (Redaktion)</button>') + '</div>' +
@@ -237,9 +240,89 @@ function zeigeBoard(){
     document.getElementById("abmelden").addEventListener("click", async () => { await sb.auth.signOut(); location.reload(); });
     document.getElementById("einladen").addEventListener("click", einladen);
     document.getElementById("lauf").addEventListener("click", starteLauf);
+    document.getElementById("webquellen").addEventListener("click", zeigeWebquellen);
+    document.getElementById("protokoll").addEventListener("click", zeigeProtokoll);
   } else {
     document.getElementById("anmelden").addEventListener("click", () => zeigeAnmeldung());
   }
+}
+
+// ── Protokoll (nur angemeldete Aktionen, Beschluss Michael 01.08.2026) ───────
+function protokolliere(aktion, urn, details){
+  if (!angemeldet) return;
+  sb.from("sm_protokoll").insert({ nutzer: nutzerEmail, aktion,
+    urn: urn ? String(urn) : null, details: details || null }).then(() => {});
+}
+
+async function zeigeProtokoll(){
+  const { data, error } = await sb.from("sm_protokoll").select("*")
+    .order("id", { ascending: false }).limit(100);
+  if (error) { melde("Fehler: " + error.message); return; }
+  const label = { lauf_angefordert: "🔄 Lauf angefordert", text_kopiert: "📋 Text kopiert", fotos_geladen: "📥 Fotos geladen" };
+  const zeilen = (data || []).map(z => {
+    const p = posts.find(x => String(x.urn) === String(z.urn));
+    return '<tr><td class="meta" style="white-space:nowrap">' +
+      new Date(z.zeitpunkt).toLocaleString("de-AT") + '</td><td class="meta">' + esc(z.nutzer) +
+      '</td><td>' + (label[z.aktion] || esc(z.aktion)) + '</td><td class="meta">' +
+      esc(p ? p.titel : (z.details || z.urn || "")) + '</td></tr>';
+  }).join("");
+  document.body.insertAdjacentHTML("beforeend",
+    '<div class="overlay" id="protokollansicht"><div id="anmeldung" style="max-width:760px;text-align:left">' +
+    '<h2 style="text-align:center">📜 Protokoll (letzte 100 Aktionen)</h2>' +
+    (zeilen ? '<div style="max-height:60vh;overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">' + zeilen + "</table></div>"
+            : '<p class="meta">Noch keine Einträge.</p>') +
+    '<p style="text-align:center"><button id="protokollzu">Schließen</button></p></div></div>');
+  document.getElementById("protokollzu").addEventListener("click", () => document.getElementById("protokollansicht").remove());
+}
+
+// ── Webquellen-Verwaltung (bis 10 je Organisation, Redaktion) ────────────────
+async function zeigeWebquellen(){
+  const alt = document.getElementById("webquellenansicht");
+  if (alt) alt.remove();
+  const { data, error } = await sb.from("sm_webquellen").select("*")
+    .order("organisation").order("id");
+  if (error) { melde("Fehler: " + error.message); return; }
+  const orgs = [...new Set([...posts.map(p => p.organisation), ...(data || []).map(w => w.organisation)])].sort();
+  const zeilen = (data || []).map(w =>
+    '<tr' + (w.aktiv ? '' : ' style="opacity:.5"') + '><td style="white-space:nowrap">' + esc(w.organisation) +
+    '</td><td style="word-break:break-all"><a href="' + esc(w.url) + '" target="_blank">' + esc(w.url) + '</a>' +
+    (w.aktiv ? '' : ' <span class="meta">(deaktiviert)</span>') + '</td>' +
+    '<td style="white-space:nowrap"><button data-wq="' + w.id + '" data-ak="toggle" title="' + (w.aktiv ? "Deaktivieren" : "Aktivieren") + '">' + (w.aktiv ? "⏸" : "▶️") + '</button> ' +
+    '<button data-wq="' + w.id + '" data-ak="aendern" title="URL ändern">✏️</button> ' +
+    '<button data-wq="' + w.id + '" data-ak="loeschen" title="Löschen">🗑️</button></td></tr>').join("");
+  document.body.insertAdjacentHTML("beforeend",
+    '<div class="overlay" id="webquellenansicht"><div id="anmeldung" style="max-width:760px;text-align:left">' +
+    '<h2 style="text-align:center">🌐 Webquellen je Organisation (höchstens 10)</h2>' +
+    '<div style="max-height:50vh;overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">' + zeilen + "</table></div>" +
+    '<p style="display:flex;gap:6px;flex-wrap:wrap"><input list="orgliste" id="wqorg" placeholder="Organisation" style="flex:1;min-width:150px;margin:0">' +
+    '<datalist id="orgliste">' + orgs.map(o => '<option value="' + esc(o) + '">').join("") + '</datalist>' +
+    '<input id="wqurl" placeholder="https://…" style="flex:2;min-width:220px;margin:0">' +
+    '<button id="wqneu" style="width:auto">➕ Hinzufügen</button></p>' +
+    '<p style="text-align:center"><button id="webquellenzu">Schließen</button></p></div></div>');
+  document.getElementById("webquellenzu").addEventListener("click", () => document.getElementById("webquellenansicht").remove());
+  document.getElementById("wqneu").addEventListener("click", async () => {
+    const org = document.getElementById("wqorg").value.trim(), url = document.getElementById("wqurl").value.trim();
+    if (!org || !url.startsWith("http")) { melde("Bitte Organisation und vollständige URL (https://…) angeben."); return; }
+    const q = await sb.from("sm_webquellen").insert({ organisation: org, url, angelegt_von: nutzerEmail });
+    melde(q.error ? "Fehler: " + q.error.message : "Webquelle hinzugefügt.");
+    if (!q.error) zeigeWebquellen();
+  });
+  document.querySelectorAll("#webquellenansicht button[data-wq]").forEach(b => b.addEventListener("click", async () => {
+    const id = b.dataset.wq, w = (data || []).find(x => String(x.id) === id);
+    if (!w) return;
+    let q;
+    if (b.dataset.ak === "toggle") q = await sb.from("sm_webquellen").update({ aktiv: !w.aktiv }).eq("id", id);
+    if (b.dataset.ak === "aendern") {
+      const neu = (prompt("Neue URL für " + w.organisation + ":", w.url) || "").trim();
+      if (!neu || neu === w.url) return;
+      q = await sb.from("sm_webquellen").update({ url: neu }).eq("id", id);
+    }
+    if (b.dataset.ak === "loeschen") {
+      if (!confirm("Webquelle löschen?\n" + w.organisation + " — " + w.url)) return;
+      q = await sb.from("sm_webquellen").delete().eq("id", id);
+    }
+    if (q) { melde(q.error ? "Fehler: " + q.error.message : "Gespeichert."); if (!q.error) zeigeWebquellen(); }
+  }));
 }
 
 // ── Aktualisierungslauf (manuell angefordert, ausgefuehrt auf Michaels Mac) ──
@@ -258,6 +341,7 @@ async function starteLauf(){
   }
   const ins = await sb.from("sm_laeufe").insert({ angefordert_von: nutzerEmail }).select("id").single();
   if (ins.error) { melde("Fehler: " + ins.error.message); return; }
+  protokolliere("lauf_angefordert", null, "Lauf " + ins.data.id);
   zeigeLauf(ins.data.id);
 }
 
@@ -336,6 +420,13 @@ async function lade(){
   marken = {};
   (m.data || []).forEach(r => { (marken[r.urn] = marken[r.urn] || new Set()).add(r.markierung); });
   zeichne();
+  const lauf = await sb.from("sm_laeufe").select("beendet_am,angefordert_von").eq("status", "fertig")
+    .order("id", { ascending: false }).limit(1);
+  const el = document.getElementById("letzterlauf");
+  if (el) el.textContent = (lauf.data && lauf.data.length && lauf.data[0].beendet_am)
+    ? "Letzter Lauf: " + new Date(lauf.data[0].beendet_am).toLocaleString("de-AT") +
+      " · angefordert von " + lauf.data[0].angefordert_von
+    : "Noch kein abgeschlossener Lauf.";
 }
 
 function zeichne(){
@@ -434,6 +525,7 @@ async function aktion(urn, ak){
     if (urls.length === 1) {
       ladeDatei(urls[0].signedUrl);
       melde("Foto wird in den Download-Ordner gespeichert.");
+      protokolliere("fotos_geladen", urn, "1 Foto");
       return;
     }
     melde(urls.length + " Fotos werden als ZIP gepackt …");
@@ -450,6 +542,7 @@ async function aktion(urn, ak){
       ladeDatei(url, zipName);
       setTimeout(() => URL.revokeObjectURL(url), 60000);
       melde(dateien.length + " Fotos als " + zipName + " in den Download-Ordner gespeichert.");
+      protokolliere("fotos_geladen", urn, dateien.length + " Fotos als ZIP");
     } catch (e) { melde("Foto-Download fehlgeschlagen: " + e.message); }
     return;
   }
@@ -458,6 +551,7 @@ async function aktion(urn, ak){
     const ok = await inZwischenablage((p.text || "") + "\n\n" + quellenzeile(p));
     melde(ok ? "Text + Quellenzeile in die Zwischenablage kopiert."
              : "Kopieren nicht möglich — bitte den Text über 📄 Details öffnen und manuell kopieren.");
+    if (ok) protokolliere("text_kopiert", urn);
     return;
   }
   if (ak === "uebernommen" || ak === "uninteressant") {
