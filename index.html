@@ -93,7 +93,13 @@ const quellenzeile = p => "Quelle: " + p.organisation + ", " +
 
 // Zwischenablage mit Rueckfall auf den klassischen Kopierbefehl
 async function inZwischenablage(text){
-  try { await navigator.clipboard.writeText(text); return true; } catch (e) {}
+  try {
+    await Promise.race([
+      navigator.clipboard.writeText(text),
+      new Promise((_, ab) => setTimeout(() => ab(new Error("Zeitüberschreitung")), 1500))
+    ]);
+    return true;
+  } catch (e) {}
   const ta = document.createElement("textarea");
   ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
   document.body.appendChild(ta); ta.focus(); ta.select();
