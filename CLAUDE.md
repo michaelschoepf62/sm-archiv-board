@@ -50,8 +50,10 @@ Mandantenbezug. Die KI-Team-/Dashboard-Themen liegen weiterhin im Projekt
   Datum, Original-Link) in die Zwischenablage, Quellenzeile auch in der Detailansicht
   sichtbar; Dauerhinweis auf die Facebook-Lücke in der Filterzeile;
   Kopfzeile bleibt beim Scrollen fixiert (sticky); Aktionsleiste je Beitrag als
-  **Icon-Reihe mit Tooltips** (📄 Details, 📋 Text kopieren, 📥 alle Fotos des
-  Beitrags über signierte Download-URLs in den Download-Ordner, ✔ übernommen,
+  **Icon-Reihe mit Tooltips** (📄 Details, 📋 Text kopieren — mit Rückfall-Kopierweg
+  und Zeitschranke, 📥 Fotos in den Download-Ordner: einzeln als JPG, mehrere als
+  eine ZIP-Datei (eigener ZIP-Packer im Board, da Chrome zeitversetzte
+  Mehrfach-Downloads blockiert — Fix 01.08.2026), ✔ übernommen,
   🚫/👁 aus-/einblenden, 📦/♻️/🗑️/❌ Statuswechsel);
   **manueller Aktualisierungslauf** (Knopf „🔄 Aktualisieren", alle aktiven Nutzer):
   legt eine Anforderung in `sm_laeufe` an und zeigt mittig ein Fortschritts-Overlay
@@ -192,13 +194,14 @@ Zustimmungs-Vorlage aus den offenen Punkten bleibt dafür wichtig.]
 - Erster Magic-Link-Login-Test durch Michael am Board: Link vom 31.07.2026
   (verschickt über den neuen SMTP an michael.schoepf@gmail.com) anklicken und
   prüfen, dass das Board lädt
-- Ersten Automatik-Lauf prüfen: `~/.config/sm-recherche/logs/` (Folgetag nach 8:00)
-- Kopfloser Chrome-Zugriff ungeklärt: Testlauf 4 (31.07.2026, `claude -p`) bekam
-  keine Verbindung zur Claude-in-Chrome-Extension — möglicherweise, weil parallel
-  eine interaktive Claude-Session mit dem Chrome verbunden war. Klärung durch den
-  8-Uhr-Lauf bzw. einen Board-Lauf ohne offene Claude-Session; falls es dauerhaft
-  scheitert: Chrome mit Remote-Debugging-Port oder Playwright-Profil als Ausweg
-  (Vorschläge im Lauf-Log vom 31.07.2026)
+- Erster Automatik-Lauf (01.08.2026, 8:00) TEILERFOLG: Dienst Web voll funktionsfähig
+  (21 Web-Beiträge + 24 Fotos erfasst, dual in Vault und DB); die Chrome-Dienste
+  (LinkedIn/Instagram/Facebook) bekamen auch kopflos KEINE Verbindung zur
+  Claude-in-Chrome-Extension. Entscheidung Michael offen: `automatik.sh` startet
+  Chrome mit `--remote-debugging-port=9222` (plus Skill-Umstellung auf CDP) oder
+  Playwright-Profil — bis dahin erfassen Automatik/Board-Läufe nur den Dienst Web
+- Entscheidung Michael offen (aus dem Lauf-Log 01.08.2026): Weltkärntner-Galerie
+  vom 13.07. hat 39 Fotos, erfasst sind die ersten 5 — Rest nachholen?
 - Zustimmungs-Vorlage für die Rechteinhaber erstellen — seit der öffentlichen
   Lesesicht doppelt wichtig (schriftliche Dokumentation der laut Michael erteilten
   Zustimmungen)
