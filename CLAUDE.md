@@ -22,15 +22,23 @@ Mandantenbezug. Die KI-Team-/Dashboard-Themen liegen weiterhin im Projekt
   kennzeichnen oder weglassen
 - Nur lesende Analyse auf den Plattformen: niemals liken, kommentieren, posten
 - Trigger von Michael (Groß-/Kleinschreibung egal, lösen die Aktion direkt aus):
-  - KIARCH/kiarch: Board öffnen — `open "https://michaelschoepf62.github.io/sm-archiv-board/"`
+  - KIARCH/kiarch: Board öffnen — `open "https://weltbund-archiv.tiiny.site"`
   - KIRECHERCHE/kirecherche bzw. SM-RECHERCHE: Skill `sm-recherche` ausführen
 
 ## Die Web-App
 
-- **Live:** https://michaelschoepf62.github.io/sm-archiv-board/ (GitHub Pages, Branch main,
-  Root; Push auf main = Deployment)
-- **Repo:** `michaelschoepf62/sm-archiv-board` (public), lokal
-  `/Users/michaelschopf/Documents/Claude/Projects/sm-archiv-board/`; eine einzelne `index.html`
+- **Live:** https://weltbund-archiv.tiiny.site (Tiiny Host, Solo-Plan, Konto Michael;
+  seit 02.08.2026). **Ein Push auf main ist KEIN Deployment mehr** — Änderungen an
+  `index.html` werden erst durch einen Upload bei Tiiny Host wirksam. Der Solo-Plan
+  hat eine API (`api-docs.tiiny.host`, API-Key im Konto unter Manage Account), über
+  die sich das Ausrollen automatisieren lässt — noch nicht eingerichtet
+- **Abgelöst:** GitHub Pages (`michaelschoepf62.github.io/sm-archiv-board/`) — seit
+  Michael das Repo auf privat gestellt hat, liefert Pages nichts mehr aus
+- **Repo:** `michaelschoepf62/sm-archiv-board` (**privat** seit 02.08.2026), lokal
+  `/Users/michaelschopf/Documents/Claude/Projects/sm-archiv-board/`; eine einzelne
+  `index.html`. Das Repo ist nur noch Quellcode-Ablage, nicht mehr Auslieferung.
+  Wichtig: Das Privatstellen schützt den Supabase-Key NICHT — er steht in der
+  ausgelieferten `index.html`; Schutz leisten allein die RLS-Regeln
 - **Zugriffsmodell (seit 31.07.2026 abends):** LESEN ist öffentlich — ohne Anmeldung
   Tabs Aktiv/Archiv, Details, Text kopieren, Fotos herunterladen; beim ersten Aufruf
   Nutzungs-Disclaimer (einmalige „Verstanden"-Bestätigung via localStorage) plus
@@ -86,9 +94,13 @@ Mandantenbezug. Die KI-Team-/Dashboard-Themen liegen weiterhin im Projekt
   recursion" auslösen — deshalb die Funktion). `sm_markierungen`: jeder nur die
   eigenen Zeilen. (Historie: bis 31.07. früh war anonym ALLES offen inkl. Löschen —
   behobenes Sicherheitsloch; tagsüber alles gesperrt; abends Lesen bewusst geöffnet)
-- **Auth-Konfiguration:** Site URL und Redirect URL stehen auf der Board-URL
-  (gesetzt 31.07.2026 über Michaels Chrome; Supabase-Konsole gehört zum GitHub-Konto
-  michaelschoepf62, Anmeldung GitHub-OAuth + TOTP durch Michael)
+- **Auth-Konfiguration:** Site URL und Redirect URL müssen auf die Board-URL zeigen
+  (Supabase-Konsole gehört zum GitHub-Konto michaelschoepf62, Anmeldung GitHub-OAuth
+  + TOTP durch Michael). Nach dem Umzug auf Tiiny Host am 02.08.2026 sind sie auf
+  `https://weltbund-archiv.tiiny.site` umzustellen — sonst laufen die Magic Links ins
+  Leere und die Redakteursfunktionen sind tot. Die `index.html` selbst braucht keine
+  Anpassung: Sie bildet den Rücksprung dynamisch aus
+  `location.origin + location.pathname`
 - **Mail-Versand (seit 31.07.2026):** eigener SMTP über Gmail (`smtp.gmail.com:465`,
   Benutzer `michael@schoepf-consulting.com` mit App-Passwort „Supabase sm-board";
   setzt 2FA des Workspace-Kontos voraus, wurde dafür aktiviert). Absender ist der
@@ -205,6 +217,11 @@ Zustimmungs-Vorlage aus den offenen Punkten bleibt dafür wichtig.]
   **Facebook-Lücke geschlossen** — der Skill liest zusätzlich den `/videos`-Reiter,
   5 BMEIA-Videobeiträge nacherfasst; erfasst werden Vorschaubild, Text und Link,
   keine Videodateien (Beschluss Michael). Board-Hinweis entsprechend umformuliert
+- 02.08.2026 (später): **Umzug des Boards auf Tiiny Host** — Michael hat das Repo auf
+  privat gestellt, damit lieferte GitHub Pages nichts mehr aus; Cloudflare war ihm zu
+  aufwendig. Neue Adresse `weltbund-archiv.tiiny.site` (Solo-Plan, öffentlich ohne
+  Passwort — Zugriffsmodell unverändert). Folge für den Arbeitsablauf: Board-Änderungen
+  brauchen jetzt einen Upload, ein Push allein bewirkt nichts
 
 ## Stillgelegt (nichts löschen)
 
