@@ -167,8 +167,8 @@ function zeigeDisclaimer(){
     '<div class="overlay" id="disclaimer"><div id="anmeldung" style="max-width:520px;text-align:left">' +
     '<h2 style="text-align:center">Hinweis zur Nutzung</h2>' +
     '<p>Die Inhalte dieses Boards stammen aus den Social-Media-Auftritten und Webseiten ' +
-    'der Weltbund-Organisationen und des BMEIA (Außenministerium) und werden mit deren ' +
-    'Einverständnis bereitgestellt.</p>' +
+    'der Weltbund-Organisationen und des BMEIA (Außenministerium). Die Zustimmungen zur ' +
+    'Zweitverwertung werden derzeit eingeholt.</p>' +
     '<p>Wer Texte oder Fotos kopiert, herunterlädt oder weiterverwendet, ist <b>eigenständig ' +
     'dafür verantwortlich</b>, die Nutzungsregeln der jeweiligen Organisation (z. B. BMEIA, ' +
     'Weltbund Österreich, Weltsteirer, Weltkärntner) und des Weltbund Österreich einzuhalten — ' +
@@ -387,10 +387,10 @@ function karte(p){
   const meta = datum + (p.sm_bilder.length ? " · " + p.sm_bilder.length + " Bild(er)" : "") + " · " + dienst +
     ' · <a href="' + esc(p.post_url) + '" target="_blank">Original ↗</a>';
   const a = [btn(p.urn, "details", "📄", p.sm_bilder.length ? "Text und " + p.sm_bilder.length + " Foto(s) anzeigen" : "Text anzeigen")];
-  a.push(btn(p.urn, "kopieren", "📋", "Text + Quellenzeile in die Zwischenablage kopieren"));
-  if (p.sm_bilder.length)
-    a.push(btn(p.urn, "fotos", "📥", p.sm_bilder.length + " Foto(s) in den Download-Ordner speichern"));
   if (angemeldet) {
+    a.push(btn(p.urn, "kopieren", "📋", "Text + Quellenzeile in die Zwischenablage kopieren"));
+    if (p.sm_bilder.length)
+      a.push(btn(p.urn, "fotos", "📥", p.sm_bilder.length + " Foto(s) in den Download-Ordner speichern"));
     a.push(btn(p.urn, "uebernommen", "✔", (meineMarken.has("uebernommen") ? "Übernommen-Markierung entfernen" : "Als übernommen markieren"), false, meineMarken.has("uebernommen")));
     a.push(btn(p.urn, "uninteressant", (meineMarken.has("nicht_interessant") ? "👁" : "🚫"), (meineMarken.has("nicht_interessant") ? "Wieder einblenden" : "Nicht interessant — für mich ausblenden")));
     if (p.status === "erfasst" || p.status === "in_bearbeitung")
@@ -421,7 +421,7 @@ const btn = (urn, ak, icon, tipp, gefahr, an) =>
 
 async function aktion(urn, ak){
   const p = posts.find(x => String(x.urn) === String(urn));
-  if (!angemeldet && ak !== "details" && ak !== "kopieren" && ak !== "fotos") return;
+  if (!angemeldet && ak !== "details") return;
   if (ak === "details") {
     if (offen.has(urn)) { offen.delete(urn); zeichne(); return; }
     offen.add(urn);
