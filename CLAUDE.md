@@ -232,9 +232,10 @@ Zustimmungs-Vorlage aus den offenen Punkten bleibt dafür wichtig.]
 
 ## Offene Punkte (Stand 01.08.2026)
 
-- Erster Magic-Link-Login-Test durch Michael am Board: Link vom 31.07.2026
-  (verschickt über den neuen SMTP an michael.schoepf@gmail.com) anklicken und
-  prüfen, dass das Board lädt
+- Erledigt 02.08.2026: Nach dem Umzug auf Tiiny Host hat Michael Site URL und
+  Redirect URL in Supabase auf `https://weltbund-archiv.tiiny.site` umgestellt
+  und den Magic-Link-Login geprüft — Board lädt, Anmeldung funktioniert. Damit
+  ist auch der seit 31.07.2026 offene erste Login-Test erledigt
 - Erledigt 01.08.2026 (Lauf 6): Erster interaktiver Lauf durchgeführt — LinkedIn,
   Instagram und Facebook liefern über `/sm-recherche` wieder, der Skill trägt Lauf
   und Protokoll korrekt ein, der Board-Hinweis „Letzter Lauf … angefordert von …"
