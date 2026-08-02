@@ -28,10 +28,16 @@ Mandantenbezug. Die KI-Team-/Dashboard-Themen liegen weiterhin im Projekt
 ## Die Web-App
 
 - **Live:** https://weltbund-archiv.tiiny.site (Tiiny Host, Solo-Plan, Konto Michael;
-  seit 02.08.2026). **Ein Push auf main ist KEIN Deployment mehr** — Änderungen an
-  `index.html` werden erst durch einen Upload bei Tiiny Host wirksam. Der Solo-Plan
-  hat eine API (`api-docs.tiiny.host`, API-Key im Konto unter Manage Account), über
-  die sich das Ausrollen automatisieren lässt — noch nicht eingerichtet
+  seit 02.08.2026). **Ein Push auf main ist KEIN Deployment mehr** — ausgerollt wird
+  mit `./deploy.sh` im Projektordner (seit 02.08.2026): lädt `index.html` per
+  `PUT https://ext.tiiny.host/v1/upload` hoch und setzt dabei `disableIndexing`.
+  Zugangsdaten in `~/.config/tiiny-host/api.json` (`api_key`, `domain`) — bewusst
+  außerhalb des Repos. API-Doku: `api-docs.tiiny.host`, Schlüssel erzeugt man im
+  Konto unter Manage Account
+- **Suchmaschinen ausgeschlossen** (Beschluss Michael 02.08.2026): Das Board ist für
+  jeden mit Link erreichbar, wird aber nicht indexiert (`robots.txt` mit
+  `Disallow: /`, gesetzt über `disableIndexing`). Grund: Die schriftlichen
+  Zustimmungen der Rechteinhaber stehen noch aus
 - **Abgelöst:** GitHub Pages (`michaelschoepf62.github.io/sm-archiv-board/`) — seit
   Michael das Repo auf privat gestellt hat, liefert Pages nichts mehr aus
 - **Repo:** `michaelschoepf62/sm-archiv-board` (**privat** seit 02.08.2026), lokal
