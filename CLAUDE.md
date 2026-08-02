@@ -253,14 +253,33 @@ Zustimmungs-Vorlage aus den offenen Punkten bleibt dafür wichtig.]
   datierter Beiträge). BMEIA-Aktuelles ist JS-gerendert (curl allein reicht nicht)
 - Erledigt 01.08.2026: Weltkärntner-Galerie vom 13.07. vollständig nachgeholt
   (40 Fotos in Vault, Storage und `sm_bilder`)
-- Zustimmungs-Vorlage erstellt 02.08.2026: `Weltbund Österreich/
-  Zustimmungserklaerung-Zweitverwertung-Vorlage.docx` (+ PDF), aufgesetzt auf
-  dem **offiziellen WBÖ-Briefbogen**; deckt Archiv-Board UND Portal ab; Punkte:
-  Nutzungsrechte, Fotos Dritter, Bildnisschutz, Quellennennung, unbefristet mit
-  Widerruf, unentgeltlich; 4 Seiten, Hinweisblatt am Ende nicht mitversenden.
-  OFFEN: Platzhalter füllen (Empfängerorganisation, Ansprechpartner mit
-  Funktion), juristische Durchsicht, Versand an die sechs Organisationen,
-  Rückläufe dokumentieren
+- Zustimmungs-Vorlage, Fassung 2 vom 02.08.2026: `Weltbund Österreich/
+  Zustimmungserklaerung-Zweitverwertung-Vorlage.docx` (+ PDF + .md), auf dem
+  **offiziellen WBÖ-Briefbogen**, 6 Seiten, Hinweisblatt am Ende nicht
+  mitversenden. Nach den Prüfvermerken von **Carla (Compliance)** und **David
+  (Datenschutz)** überarbeitet — neu gegenüber Fassung 1: Freistellungsklausel,
+  Ankreuzvariante statt Pauschalzusicherung bei Personenfotos, eigener Punkt
+  „Rechte abgebildeter Personen" mit 14-Tage-Frist, Punkt
+  „Datenschutzrechtliche Rollen", Rückwirkung auf bereits erfasste Beiträge,
+  Bearbeitungsrecht auch fürs Board, Vorschaubilder aus Videos im Gegenstand,
+  Bestätigung der Vertretungsbefugnis, Rücksendeweg. Der Weltbund selbst steht
+  nicht mehr im Empfängerkreis (kann sich nicht selbst zustimmen).
+  OFFEN: Platzhalter füllen (Empfänger, Kanäle, Portal-Adresse, Ansprechpartner),
+  anwaltliche Durchsicht, Versand, Rücklaufübersicht anlegen
+- **Offen nach der Prüfung vom 02.08.2026 (Vermerke bei Carla und David):**
+  Datenschutzinformation nach Art. 14 DSGVO und Impressum (§ 5 ECG, § 25
+  MedienG) fehlen auf dem Board — laut David der kritische Befund, weil die
+  Ausnahme des Art. 14 Abs. 5 lit. b gerade die öffentliche Bereitstellung
+  dieser Information voraussetzt. Dazu: schriftliche Interessenabwägung nach
+  Art. 6 Abs. 1 lit. f, VVT-Eintrag, Löschprozess über **alle** Speicherorte
+  (die Vault-Dateien überleben derzeit das Löschen im Board), Einzelfoto-
+  Löschung, AVV-Status der vier Dienstleister (Supabase, Tiiny Host, iCloud,
+  Gmail) sowie ein **AVV zwischen Weltbund und Michael** — Michael hat am
+  02.08.2026 entschieden, dass der **Verein Verantwortlicher** ist
+- Erledigt 02.08.2026 nach der Prüfung: Disclaimer korrigiert (behauptete ein
+  noch ausstehendes Einverständnis), Kopieren und Foto-Download auf angemeldete
+  Redakteure beschränkt (widersprach Punkt 2 der Erklärung), Facebook-Video mit
+  einer Passantin in den Papierkorb verschoben (`fb-2209312743251535`)
 - Facebook-Lücke 02.08.2026 weitgehend geschlossen: Video-/Reel-Beiträge werden
   jetzt über `/videos` erfasst, 5 BMEIA-Beiträge nachgeholt. Rest-Lücke: reine
   Textbeiträge ohne Bild und Video; bei Videos ist das Datum aus der relativen
