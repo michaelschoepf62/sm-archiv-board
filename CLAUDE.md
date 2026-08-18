@@ -10,7 +10,7 @@ Projektgedächtnis für alles rund um das Board und die SocialMedia-Recherche.
 
 Träger: Michael Schöpf (michaelschoepf62 auf GitHub). Ehrenamts-Kontext, kein
 Mandantenbezug. Die KI-Team-/Dashboard-Themen liegen weiterhin im Projekt
-`/Users/michaelschopf/Documents/Claude/Projects/KI-MITARBEITER` — hier NICHT vermischen.
+`/Users/michaelschopf/Projekte/KI-MITARBEITER` — hier NICHT vermischen.
 
 ## Arbeitsregeln (übernommen aus dem Ursprungsprojekt)
 
@@ -41,7 +41,7 @@ Mandantenbezug. Die KI-Team-/Dashboard-Themen liegen weiterhin im Projekt
 - **Abgelöst:** GitHub Pages (`michaelschoepf62.github.io/sm-archiv-board/`) — seit
   Michael das Repo auf privat gestellt hat, liefert Pages nichts mehr aus
 - **Repo:** `michaelschoepf62/sm-archiv-board` (**privat** seit 02.08.2026), lokal
-  `/Users/michaelschopf/Documents/Claude/Projects/sm-archiv-board/`; eine einzelne
+  `/Users/michaelschopf/Projekte/sm-archiv-board/`; eine einzelne
   `index.html`. Das Repo ist nur noch Quellcode-Ablage, nicht mehr Auslieferung.
   Wichtig: Das Privatstellen schützt den Supabase-Key NICHT — er steht in der
   ausgelieferten `index.html`; Schutz leisten allein die RLS-Regeln
